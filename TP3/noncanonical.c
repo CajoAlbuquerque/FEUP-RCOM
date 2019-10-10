@@ -1,8 +1,79 @@
 /*Non-Canonical Input Processing*/
 #include "noncanonical.h"
-#include "statemachine.h"
 
 volatile int STOP=FALSE;
+
+/**
+ * 	Writes a supervision frame or a unumbered frame
+ * 
+ * 	@param fd File descriptor of the open serial port
+ * 	@param control Control character value to be written
+ * 	
+ * 	@return Number of characters written
+ */
+int write_SUframe(int fd, unsigned char control) {
+	unsigned char set[SET_SIZE];
+	
+	set[F1_INDEX] = FLAG;
+	set[A_INDEX] = A;
+	set[C_INDEX] = control;
+	set[BCC_INDEX] = A ^ control;
+	set[F2_INDEX] = FLAG;
+	
+	int res = write(fd, set, SET_SIZE);
+    printf("Sent RR\n");
+    
+    return res;
+}
+
+int llread(int fd, char * buffer) {
+	unsigned char current_bcc2, byte[1];
+	unsigned int current_index = 0;
+	unsigned int data_ok = FALSE;
+	unsigned int entered_data = TRUE;
+	
+	while(!STOP) {
+		read(fd, byte, 1);
+		int state = openSM(byte[0]);
+		
+		if(state == DATA_LOOP && entered_data) {
+			current_bcc2 = byte[0];
+			entered_data = FALSE;
+		}
+		
+		if(state == DATA_LOOP) {
+			if(current_bcc2 == byte[0])
+				data_ok = TRUE;
+			
+			current_bcc2 = current_bcc2 ^ byte[0];
+			buffer[current_index] = byte[0];
+			current_index++;
+		}
+		else if(state == END) {
+			STOP = TRUE;
+		}
+	}
+	
+	if(data_ok) {
+		if(NS) {
+			write_SUframe(fd, RR_1);
+			NS = 0;
+		}
+		else {
+			write_SUframe(fd, RR_0);
+			NS = 1;
+		}
+	}
+	else {
+		if(NS)
+			write_SUframe(fd, REJ_1);
+		else
+			write_SUframe(fd, REJ_0);
+	}
+		
+	
+	return current_index;
+}
 
 int main(int argc, char** argv)
 {
@@ -61,10 +132,13 @@ int main(int argc, char** argv)
     }
 
     printf("New termios structure set\n");
+    
+    //----------------------------------------------FIM DA CONFIGURACAO
 
 /* Estabelicemnto */
     while (!STOP) {       /* loop for input */
-      res = read(fd,buf,1);   /* returns after 1 chars have been input */ 
+      res = read(fd,buf,1);   /* returns after 1 chars have been input */
+      openSM(buf[0]);
     }
 	sleep(4);
 	set[F1_INDEX] = FLAG;
@@ -75,10 +149,12 @@ int main(int argc, char** argv)
 
 	res = write(fd, set, SET_SIZE);
     printf("Send\n");
+	//-----------------------------------------------FIM DO READ OPEN
+	unsigned char msg[256];
+	
+	llread(fd, msg);
 
     sleep(1);
-
-
 
     tcsetattr(fd,TCSANOW,&oldtio);
     close(fd);
