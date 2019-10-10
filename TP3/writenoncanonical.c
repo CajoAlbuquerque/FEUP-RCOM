@@ -40,6 +40,102 @@ void set_transmission() {
 
 }
 
+int llwrite(int fd, char * buffer, int length) {
+  unsigned char set_write[SET_SIZE + 2*(length) +1], set_receive[SET_SIZE], read_byte[1], input_byte;
+  unsigned char bcc2, c_message;
+  int j = 0, state = 0;
+  bool STOP_R = FALSE;
+
+  set_write[F1_INDEX] = FLAG;
+  set_write[A_INDEX] = A;
+
+  if(NS == 0) {
+    set_write[C_INDEX] = CONTROL_0;
+  }
+  else set_write[C_INDEX] = CONTROL_1;
+
+  set_write[BCC_INDEX] = (A^C_SET);
+
+
+  for (unsigned int i = 0; i < length; i++) {
+    if (i == 0) {
+      bcc2 = buffer[i];
+    }
+    else {
+      bcc2 = (bcc2 ^ buffer[i]);
+    }
+  }
+
+  for (unsigned int t = 0; t < length; t++) {
+    if (buffer[t] == ESC) {
+      set_write[BCC_INDEX + t + 1 + j] = buffer[t];
+      j++;
+      set_write[BCC_INDEX + t + 1 + j] = ESC_SOL;
+    }
+
+    else {
+      set_write[BCC_INDEX + t + 1 + j] = buffer[t];
+    }
+  }
+
+  set_write[BCC_INDEX + length + 1 + j] = bcc2;
+  set_write[BCC_INDEX + length + 2 + j] = FLAG;
+
+  write(fd, set_write, SET_SIZE + length + j + 1);
+
+  while (STOP_R == FALSE) {       /* loop for input */
+    read(fd,input_byte,1);   /* returns after 5 chars have been input */
+    read_byte[0] = input_byte;
+
+    switch(state) {
+      case 0:
+        if (read_byte[0] == FLAG) {
+          state++;
+        }
+        break;
+      case 1:
+        if (read_byte[0] == A) {
+          state++;
+        }
+        break;
+      case 2:
+        if (read_byte[0] == RR_0) {
+          c_message = RR_0;
+          state++;
+          NS = 1;
+        }
+        else if (read_byte[0] == RR_1) {
+          c_message = RR_1;
+          state++;
+          NS = 0;
+        }
+        break;
+      case 3:
+        if (read_byte[0] == (A^c_message)) {
+          state++;
+        }
+        break;
+      case 4:
+        if (read_byte[0] == FLAG) {
+          state++;
+        }
+        break;
+      default:
+        break;
+    }
+
+    //printf(":%s:%d\n", input, res);
+    if (read_byte[0]=='\0') {
+      STOP_R=TRUE;
+    }
+
+  }
+
+
+  return 1;
+
+}
+
 int main(int argc, char** argv)
 {
     int res, set_res, state = 0;
@@ -47,7 +143,7 @@ int main(int argc, char** argv)
     char input[255], output[255], str[255];
     unsigned char set[SET_SIZE], set_reception[SET_SIZE];
     unsigned char byte[1];
-    int i = 0;
+    int k = 0;
 
     (void) signal(SIGALRM, timeout);
 
@@ -92,6 +188,7 @@ int main(int argc, char** argv)
 
     set_transmission();
 
+
     alarm(3);
     while (READY == FALSE) {
       set_res = read(fd, byte,1);
@@ -132,6 +229,9 @@ int main(int argc, char** argv)
 
     }
 
+    char cenas[4] = "yoyo";
+    llwrite(fd,cenas, strlen(cenas) + 1);
+
 
     printf("Write your words:\n");
     gets(output);
@@ -148,8 +248,8 @@ int main(int argc, char** argv)
 
     while (STOP==FALSE) {       /* loop for input */
       res = read(fd,input,1);   /* returns after 5 chars have been input */
-      str[i] = input[0];
-      i++;
+      str[k] = input[0];
+      k++;
       input[res]=0;               /* so we can printf... */
       printf(":%s:%d\n", input, res);
       if (input[0]=='\0')

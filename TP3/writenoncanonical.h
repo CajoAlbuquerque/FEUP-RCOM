@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <stdbool.h> 
 
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS1"
@@ -23,3 +24,16 @@
 #define BCC_INDEX 3
 #define F2_INDEX 4
 #define SET_SIZE 5
+
+#define ESC 0x7d
+#define ESC_SOL 0x5d
+
+#define CONTROL_0 0x00
+#define CONTROL_1 0x40
+#define RR_0 0x05
+#define RR_1 0x85
+#define REJ_0 0x01
+#define REJ_1 0x81
+
+
+unsigned int NS = 0;
