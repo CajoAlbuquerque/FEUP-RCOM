@@ -18,17 +18,18 @@
 
 /**
  *  State machine to processes the comunication establishment.
- * 
+ *
  *  @param byte Character to be processed
- *  @param control Control character value (C_SET for receiver and C_UA for transmitter)
+ *  @param control Control character value (C_SET for receiver and C_UA for
+ * transmitter)
  *  @return 1 if the end state has been reached, 0 otherwise.
  */
 int openSM(unsigned char byte, unsigned char control);
 
 /**
  * 	Receiver state machine to parse the data frame.
- * 
+ *
  * 	@param byte Character to be processed
  *  @return current state
  */
- int readSM(unsigned char byte);
+int readSM(unsigned char byte);

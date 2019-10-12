@@ -1,13 +1,13 @@
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-#include <termios.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <termios.h>
+#include <unistd.h>
 
 #include "statemachine.h"
 
@@ -36,6 +36,5 @@
 #define RR_1 0x85
 #define REJ_0 0x01
 #define REJ_1 0x81
-
 
 unsigned int NS = 0;
