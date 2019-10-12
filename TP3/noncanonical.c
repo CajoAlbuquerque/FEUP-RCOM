@@ -31,8 +31,14 @@ int llread(int fd, unsigned char *buffer) {
     }
     int state = readSM(byte[0]);
 
-    // Sets initial bcc2 value equal to first data char
-    if (state == DATA_LOOP) {
+	if (state == C_RCV){
+		if(byte[0] == CONTROL_0 && NR == 1){
+			write_SUframe(fd, RR_1);
+		} else if (byte[0] == CONTROL_1 && NR == 0) {
+			write_SUframe(fd, RR_0);
+		}
+		return -1;
+	} else if (state == DATA_LOOP) {
       if (current_bcc2 == byte[0])
         data_ok = TRUE;
       else
