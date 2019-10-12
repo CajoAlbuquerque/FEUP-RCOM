@@ -22,7 +22,7 @@ int llread(int fd, unsigned char *buffer) {
   unsigned char current_bcc2 = 0;
   unsigned char byte[1];
   unsigned int current_index = 0;
-  unsigned int data_ok;
+  unsigned int data_ok = FALSE, repeated_data = FALSE;
 
   while (!STOP) {
     if (read(fd, byte, 1) < 0) {
@@ -31,14 +31,18 @@ int llread(int fd, unsigned char *buffer) {
     }
     int state = readSM(byte[0]);
 
-	if (state == C_RCV){
+	if (state == C_RCV){ //Checking for repeated data
 		if(byte[0] == CONTROL_0 && NR == 1){
 			write_SUframe(fd, RR_1);
 		} else if (byte[0] == CONTROL_1 && NR == 0) {
 			write_SUframe(fd, RR_0);
 		}
-		return -1;
-	} else if (state == DATA_LOOP) {
+    repeated_data = TRUE;
+		/*
+      When repeated data is sent by the transmitter,
+      the receiver ignores all data in the frame.
+    */
+	} else if (state == DATA_LOOP && !repeated_data) { //Data is being received
       if (current_bcc2 == byte[0])
         data_ok = TRUE;
       else
@@ -51,6 +55,10 @@ int llread(int fd, unsigned char *buffer) {
       STOP = TRUE;
     }
   }
+
+  //When there is repeated data buffer will have no content
+  if(repeated_data)
+    return 0;
 
   if (data_ok) {
     if (NR) {
