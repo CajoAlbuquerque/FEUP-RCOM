@@ -1,6 +1,6 @@
 #include "statemachine.h"
 
-int receiverSM(unsigned char byte) {
+int openSM(unsigned char byte) {
 	static int state = START;
 	switch(state){
 		case START: 

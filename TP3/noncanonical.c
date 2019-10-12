@@ -3,14 +3,6 @@
 
 volatile int STOP=FALSE;
 
-/**
- * 	Writes a supervision frame or a unumbered frame
- * 
- * 	@param fd File descriptor of the open serial port
- * 	@param control Control character value to be written
- * 	
- * 	@return Number of characters written
- */
 int write_SUframe(int fd, unsigned char control) {
 	unsigned char set[SET_SIZE];
 	
@@ -26,7 +18,7 @@ int write_SUframe(int fd, unsigned char control) {
     return res;
 }
 
-int llread(int fd, char * buffer) {
+int llread(int fd, unsigned char * buffer) {
 	unsigned char current_bcc2, byte[1];
 	unsigned int current_index = 0;
 	unsigned int data_ok = FALSE;
@@ -77,10 +69,9 @@ int llread(int fd, char * buffer) {
 
 int main(int argc, char** argv)
 {
-    int fd,res;
+    int fd;
     struct termios oldtio,newtio;
     char buf[3];
-	int state = 0;
 	unsigned char set[SET_SIZE];
 
     if ( (argc < 2) || 
@@ -91,14 +82,15 @@ int main(int argc, char** argv)
     }
 
 
-  /*
-    Open serial port device for reading and writing and not as controlling tty
-    because we don't want to get killed if linenoise sends CTRL-C.
-  */
-  
-    
+	/*
+    	Open serial port device for reading and writing and not as controlling tty
+    	because we don't want to get killed if linenoise sends CTRL-C.
+	*/
     fd = open(argv[1], O_RDWR | O_NOCTTY );
-    if (fd <0) {perror(argv[1]); exit(-1); }
+    if (fd < 0) {
+		perror(argv[1]);
+		exit(-1);
+	}
 
     if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
       perror("tcgetattr");
@@ -113,17 +105,12 @@ int main(int argc, char** argv)
     /* set input mode (non-canonical, no echo,...) */
     newtio.c_lflag = 0;
 
-    newtio.c_cc[VTIME]    = 1;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 1;   /* blocking read until 1 chars received */
+    newtio.c_cc[VTIME] = 0;   /* inter-character timer unused */
+    newtio.c_cc[VMIN] = 1;   /* blocking read until 1 chars received */
 
-
-
-  /* 
-    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a leitura do(s) próximo(s) caracter(es)
-  */
-
-
-
+	/* 
+    	VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a leitura do(s) prï¿½ximo(s) caracter(es)
+	*/
     tcflush(fd, TCIOFLUSH);
 
     if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
@@ -137,7 +124,10 @@ int main(int argc, char** argv)
 
 /* Estabelicemnto */
     while (!STOP) {       /* loop for input */
-      res = read(fd,buf,1);   /* returns after 1 chars have been input */
+      if(read(fd,buf,1) == -1) {
+		  perror("noncanonical read");
+		  exit(-1);
+	  }   /* returns after 1 chars have been input */
       openSM(buf[0]);
     }
 	sleep(4);
@@ -147,7 +137,10 @@ int main(int argc, char** argv)
 	set[BCC_INDEX] = A ^ C_UA;
 	set[F2_INDEX] = FLAG;
 
-	res = write(fd, set, SET_SIZE);
+	if(write(fd, set, SET_SIZE) < 0) {
+		perror("noncanonical write");
+		exit(-1);
+	}
     printf("Send\n");
 	//-----------------------------------------------FIM DO READ OPEN
 	unsigned char msg[256];

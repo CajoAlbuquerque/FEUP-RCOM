@@ -16,7 +16,6 @@
 #define BCC2_OK 6
 #define END 7
 
-
 /**
  *  Receiver state machine to processes the set message.
  * 

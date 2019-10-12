@@ -27,7 +27,15 @@
 
 unsigned int NS = 0;
 
+/**
+ * 	Writes a supervision frame or an unumbered frame
+ * 
+ * 	@param fd File descriptor of the open serial port
+ * 	@param control Control character value to be written
+ * 	
+ * 	@return Number of characters written
+ */
 int write_SUframe(int fd, unsigned char control);
-int llread(int fd, char * buffer);
+int llread(int fd, unsigned char * buffer);
 int main(int argc, char** argv);
 
