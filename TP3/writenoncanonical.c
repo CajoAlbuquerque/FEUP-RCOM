@@ -41,7 +41,7 @@ void set_transmission() {
 int llwrite(int fd, char *buffer, int length) {
   unsigned char set_write[SET_SIZE + 2 * (length) + 1], set_receive[SET_SIZE],
       read_byte[1], input_byte;
-  unsigned char bcc2, c_message;
+  unsigned char bcc2 = 0, c_message;
   int j = 0, state = 0;
   bool STOP_R = FALSE;
 
@@ -56,23 +56,27 @@ int llwrite(int fd, char *buffer, int length) {
   set_write[BCC_INDEX] = (A ^ C_SET);
 
   for (unsigned int i = 0; i < length; i++) {
-    if (i == 0) {
-      bcc2 = buffer[i];
-    } else {
-      bcc2 = (bcc2 ^ buffer[i]);
-    }
-  }
-
-  for (unsigned int t = 0; t < length; t++) {
-    if (buffer[t] == ESC) {
-      set_write[BCC_INDEX + t + 1 + j] = buffer[t];
+    // Byte stuffing
+    if (buffer[i] == ESC) {
+      set_write[BCC_INDEX + i + 1 + j] = ESC;
       j++;
-      set_write[BCC_INDEX + t + 1 + j] = ESC_SOL;
+      set_write[BCC_INDEX + i + 1 + j] = ESC_SOL; // ESC_SOL = ESC ^ 0x20
+    }
+    else if (buffer[i] == FLAG) {
+      set_write[BCC_INDEX + i + 1 + j] = ESC;
+      j++;
+      set_write[BCC_INDEX + i + 1 + j] = FLAG_SOL; // FLAG_SOL = FLAG ^ 0x20
+    }
+    else {
+      set_write[BCC_INDEX + i + 1 + j] = buffer[i];
     }
 
-    else {
-      set_write[BCC_INDEX + t + 1 + j] = buffer[t];
-    }
+    /* 
+      Since bcc2 starts at 0, bcc2 ^ buffer[0] = buffer[0].
+      This way we avoid an irrelevant condition.
+      Additionally, as buffer remains unchanged, bcc2 wil not be affected by stuffing
+    */
+    bcc2 = bcc2 ^ buffer[i];
   }
 
   set_write[BCC_INDEX + length + 1 + j] = bcc2;
@@ -80,6 +84,7 @@ int llwrite(int fd, char *buffer, int length) {
 
   write(fd, set_write, SET_SIZE + length + j + 1);
 
+  //TODO: fazer um alarme para timeout e reenviar dados
   while (STOP_R == FALSE) {  /* loop for input */
     read(fd, input_byte, 1); /* returns after 5 chars have been input */
     read_byte[0] = input_byte;
@@ -99,11 +104,11 @@ int llwrite(int fd, char *buffer, int length) {
       if (read_byte[0] == RR_0) {
         c_message = RR_0;
         state++;
-        NS = 1;
+        NS = 0;
       } else if (read_byte[0] == RR_1) {
         c_message = RR_1;
         state++;
-        NS = 0;
+        NS = 1;
       }
       break;
     case 3:
@@ -124,6 +129,8 @@ int llwrite(int fd, char *buffer, int length) {
     if (read_byte[0] == '\0') {
       STOP_R = TRUE;
     }
+
+    //TODO: processar o REJ e reenviar os dados
   }
 
   return 1;

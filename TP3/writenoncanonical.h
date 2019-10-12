@@ -29,6 +29,7 @@
 
 #define ESC 0x7d
 #define ESC_SOL 0x5d
+#define FLAG_SOL 0x5e
 
 #define CONTROL_0 0x00
 #define CONTROL_1 0x40
@@ -38,3 +39,8 @@
 #define REJ_1 0x81
 
 unsigned int NS = 0;
+
+void timeout();
+void set_transmission();
+int llwrite(int fd, char *buffer, int length);
+int main(int argc, char **argv);
