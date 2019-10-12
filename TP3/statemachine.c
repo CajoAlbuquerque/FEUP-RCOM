@@ -1,8 +1,8 @@
 #include "statemachine.h"
 
-int openSM(unsigned char byte) {
+int openSM(unsigned char byte, unsigned char control) {
 	static int state = START;
-	switch(state){
+	switch(state) {
 		case START: 
 			if(byte == FLAG)
 				state = FLAG_RCV;
@@ -18,13 +18,13 @@ int openSM(unsigned char byte) {
 		case A_RCV:
 			if(byte == FLAG)
 				state = FLAG_RCV;
-			else if(byte == C_SET)
+			else if(byte == control)
 				state = C_RCV;
 			else
 				state = START;
 			break;
 		case C_RCV: 
-			if(byte == (A ^ C_SET))
+			if(byte == (A ^ control))
 				state = BCC_OK;
 			else if(byte == FLAG)
 				state = FLAG_RCV;

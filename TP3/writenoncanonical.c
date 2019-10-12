@@ -5,7 +5,6 @@ int fd;
 volatile int STOP=FALSE;
 volatile int READY = FALSE;
 
-
 void timeout() {
   static int timeouts = 1;
 
@@ -188,7 +187,6 @@ int main(int argc, char** argv)
 
     set_transmission();
 
-
     alarm(3);
     while (READY == FALSE) {
       set_res = read(fd, byte,1);
@@ -196,37 +194,9 @@ int main(int argc, char** argv)
       if(set_res > 0) {
         alarm(0);
       }
-
-      printf("%d\n", set_res);
-
-      switch(state) {
-        case 0:
-          if (byte[0] == FLAG) {
-            state++;
-          }
-          break;
-        case 1:
-          if (byte[0] == A) {
-            state++;
-          }
-          break;
-        case 2:
-          if (byte[0] == C_UA) {
-            state++;
-          }
-          break;
-        case 3:
-          if (byte[0] == (A^C_UA)) {
-            state++;
-          }
-          break;
-        case 4:
-        if (byte[0] == FLAG) {
-          READY = TRUE;
-          printf("Message received\n");
-        }
-      }
-
+      
+      if(openSM(byte[0], C_UA))
+        READY = TRUE;
     }
 
     char cenas[4] = "yoyo";

@@ -3,9 +3,9 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include "statemachine.h"
 
 #define BAUDRATE B38400
@@ -18,24 +18,34 @@
 #define F2_INDEX 4
 #define SET_SIZE 5
 
+#define CONTROL_0 0x00
+#define CONTROL_1 0x40
 #define RR_0 0x05
 #define RR_1 0x85
 #define REJ_0 0x01
 #define REJ_1 0x81
-#define C_0 0x00
-#define C_1 0x40
 
-unsigned int NS = 0;
+unsigned int NR = 0;
 
 /**
- * 	Writes a supervision frame or an unumbered frame
+ * 	Writes a supervision or unumbered frame
  * 
- * 	@param fd File descriptor of the open serial port
+ * 	@param fd File descriptor of the serial port
  * 	@param control Control character value to be written
  * 	
  * 	@return Number of characters written
  */
 int write_SUframe(int fd, unsigned char control);
-int llread(int fd, unsigned char * buffer);
-int main(int argc, char** argv);
 
+/**
+ *  Reads a data frame from the serial port
+ * 
+ *  @param fd File descriptor of the serial port
+ *  @param buffer Array of characters on which the data will be saved
+ * 
+ *  @return Number of characters read (buffer length) in case of success;
+ *  otherwise returns a negative value
+ */
+int llread(int fd, unsigned char * buffer);
+
+int main(int argc, char** argv);

@@ -19,23 +19,24 @@ int write_SUframe(int fd, unsigned char control) {
 }
 
 int llread(int fd, unsigned char * buffer) {
-	unsigned char current_bcc2, byte[1];
+	unsigned char current_bcc2 = 0;
+	unsigned char byte[1];
 	unsigned int current_index = 0;
-	unsigned int data_ok = FALSE;
-	unsigned int entered_data = TRUE;
+	unsigned int data_ok;
 	
 	while(!STOP) {
-		read(fd, byte, 1);
-		int state = openSM(byte[0]);
-		
-		if(state == DATA_LOOP && entered_data) {
-			current_bcc2 = byte[0];
-			entered_data = FALSE;
+		if(read(fd, byte, 1) < 0) {
+			perror("llread");
+			exit(-1);
 		}
+		int state = readSM(byte[0]);
 		
+		// Sets initial bcc2 value equal to first data char
 		if(state == DATA_LOOP) {
 			if(current_bcc2 == byte[0])
 				data_ok = TRUE;
+			else
+				data_ok = FALSE;
 			
 			current_bcc2 = current_bcc2 ^ byte[0];
 			buffer[current_index] = byte[0];
@@ -47,21 +48,17 @@ int llread(int fd, unsigned char * buffer) {
 	}
 	
 	if(data_ok) {
-		if(NS) {
-			write_SUframe(fd, RR_1);
-			NS = 0;
+		if(NR) {
+			NR = 0;
+			write_SUframe(fd, RR_0);
 		}
 		else {
-			write_SUframe(fd, RR_0);
-			NS = 1;
+			NR = 1;
+			write_SUframe(fd, RR_1);
 		}
 	}
-	else {
-		if(NS)
-			write_SUframe(fd, REJ_1);
-		else
-			write_SUframe(fd, REJ_0);
-	}
+	else
+		NR ? write_SUframe(fd, REJ_1) : write_SUframe(fd, REJ_0);
 		
 	
 	return current_index;
@@ -123,14 +120,16 @@ int main(int argc, char** argv)
     //----------------------------------------------FIM DA CONFIGURACAO
 
 /* Estabelicemnto */
-    while (!STOP) {       /* loop for input */
+    while (!STOP) {
       if(read(fd,buf,1) == -1) {
 		  perror("noncanonical read");
 		  exit(-1);
-	  }   /* returns after 1 chars have been input */
-      openSM(buf[0]);
+	  }
+
+      if(openSM(buf[0], C_SET))
+		STOP = TRUE;
     }
-	sleep(4);
+
 	set[F1_INDEX] = FLAG;
 	set[A_INDEX] = A;
 	set[C_INDEX] = C_UA;
