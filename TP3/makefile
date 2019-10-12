@@ -1,8 +1,13 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -Werror
 
-all: statemachine.o noncanonical.o
-	$(CC) $(CFLAGS) noncanonical.o statemachine.o -o nc
+EXEC = nserial
+
+all: statemachine.o noncanonical.o #writenoncanonical.o
+	$(CC) $(CFLAGS) noncanonical.o statemachine.o -o $(EXEC)
+
+# writenoncanonical.o: writenoncanonical.c writenoncanonical.h
+# 	$(CC) $(CFLAGS) -c writenoncanonical.c
 
 noncanonical.o: noncanonical.c noncanonical.h
 	$(CC) $(CFLAGS) -c noncanonical.c
@@ -11,5 +16,5 @@ statemachine.o: statemachine.c statemachine.h
 	$(CC) $(CFLAGS) -c statemachine.c
 
 clean:
-	rm -f nc
+	rm -f $(EXEC)
 	rm -f *.o
