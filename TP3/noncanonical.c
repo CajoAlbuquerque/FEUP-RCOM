@@ -23,6 +23,7 @@ int llread(int fd, unsigned char *buffer) {
   unsigned char byte[1];
   unsigned int current_index = 0;
   unsigned int data_ok = FALSE, repeated_data = FALSE;
+  unsigned int escape_byte = FALSE;
 
   while (!STOP) {
     if (read(fd, byte, 1) < 0) {
@@ -49,8 +50,22 @@ int llread(int fd, unsigned char *buffer) {
         data_ok = FALSE;
 
       current_bcc2 = current_bcc2 ^ byte[0];
-      buffer[current_index] = byte[0];
-      current_index++;
+
+      if(byte[0] == ESC) //byte used for stuffing
+        escape_byte = TRUE;
+      else if(escape_byte == TRUE){ //destuffing the byte
+        if(byte[0] == 0x5e)
+          buffer[current_index] = 0x7e; //original byte was 0x7e
+        else //byte[0] = 0x5d
+          buffer[current_index] = 0x7d; //original byte was 0x7d
+          escape_byte = FALSE;
+        current_index++;
+      }
+      else {
+        buffer[current_index] = byte[0];
+        current_index++;
+      }
+      
     } else if (state == END) {
       STOP = TRUE;
     }

@@ -25,6 +25,8 @@
 #define REJ_0 0x01
 #define REJ_1 0x81
 
+#define ESC 0x7d
+
 unsigned int NR = 0;
 
 /**
