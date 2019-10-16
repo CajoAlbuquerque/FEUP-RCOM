@@ -51,14 +51,17 @@ int llread(int fd, unsigned char *buffer) {
 
       current_bcc2 = current_bcc2 ^ byte[0];
 
-      if(byte[0] == ESC) //byte used for stuffing
+      if(byte[0] == ESC){//byte used for stuffing
         escape_byte = TRUE;
+      }         
       else if(escape_byte == TRUE){ //destuffing the byte
         if(byte[0] == 0x5e)
           buffer[current_index] = 0x7e; //original byte was 0x7e
-        else //byte[0] = 0x5d
+        //byte[0] = 0x5d
+        else {
           buffer[current_index] = 0x7d; //original byte was 0x7d
-          escape_byte = FALSE;
+        }
+        escape_byte = FALSE;
         current_index++;
       }
       else {
