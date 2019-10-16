@@ -126,15 +126,19 @@ int llwrite(int fd, char *buffer, int length) {
         c_message = REJ_0;
         state++;
         RR = false;
-      } else  {
+      } else if (read_byte[0] == REJ_1) {
         c_message = REJ_1;
         state++;
         RR = false;
+      } else if (read_byte[0] == FLAG) {
+        state = 1;
       }
       break;
     case 3:
       if (read_byte[0] == (A ^ c_message)) {
         state++;
+      } else if (read_byte[0] == FLAG) {
+        state = 1;
       }
       break;
     case 4:
@@ -146,13 +150,6 @@ int llwrite(int fd, char *buffer, int length) {
     default:
       break;
     }
-
-    // printf(":%s:%d\n", input, res);
-   /* if (read_byte[0] == '\0') {
-      STOP_R = TRUE;
-    }*/
-
-    //TODO: processar o REJ e reenviar os dados
   }
   alarm(0);
   if(!RR) send_message();
