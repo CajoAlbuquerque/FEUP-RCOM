@@ -4,15 +4,21 @@
 int fd;
 volatile int STOP = FALSE;
 volatile int READY = FALSE;
+enum state state = Set;
 
-void timeout() {
+void timeout() { //handler of alarm
   static int timeouts = 1;
 
   if (timeouts < 3) {
     printf("Resent\n");
-    set_transmission();
+    if(state == Set){
+      set_transmission();
+    } else if(state == Transmit){
+      send_message();
+    } 
     timeouts++;
     alarm(3);
+    timeout = 0;
   } else {
     write(STDERR_FILENO, "Couldnt establish connection.",
           strlen("Couldnt establish connection."));
@@ -38,12 +44,17 @@ void set_transmission() {
   }
 }
 
+void send_message(){ 
+  char cenas[4] = "yoyo";
+  llwrite(fd, cenas, strlen(cenas) + 1);
+}
+
 int llwrite(int fd, char *buffer, int length) {
   unsigned char set_write[SET_SIZE + 2 * (length) + 1], set_receive[SET_SIZE],
       read_byte[1], input_byte;
   unsigned char bcc2 = 0, c_message;
   int j = 0, state = 0;
-  bool STOP_R = FALSE;
+  bool STOP_R = FALSE, RR = TRUE;
 
   set_write[F1_INDEX] = FLAG;
   set_write[A_INDEX] = A;
@@ -105,10 +116,20 @@ int llwrite(int fd, char *buffer, int length) {
         c_message = RR_0;
         state++;
         NS = 0;
+        RR = true;
       } else if (read_byte[0] == RR_1) {
         c_message = RR_1;
         state++;
         NS = 1;
+        RR = true;
+      } else if (read_byte[0] == REJ_0) {
+        c_message = REJ_0;
+        state++;
+        RR = false;
+      } else  {
+        c_message = REJ_1;
+        state++;
+        RR = false;
       }
       break;
     case 3:
@@ -119,6 +140,7 @@ int llwrite(int fd, char *buffer, int length) {
     case 4:
       if (read_byte[0] == FLAG) {
         state++;
+        STOP_R = TRUE;
       }
       break;
     default:
@@ -126,13 +148,14 @@ int llwrite(int fd, char *buffer, int length) {
     }
 
     // printf(":%s:%d\n", input, res);
-    if (read_byte[0] == '\0') {
+   /* if (read_byte[0] == '\0') {
       STOP_R = TRUE;
-    }
+    }*/
 
     //TODO: processar o REJ e reenviar os dados
   }
-
+  alarm(0);
+  if(!RR) send_message();
   return 1;
 }
 
@@ -198,9 +221,9 @@ int main(int argc, char **argv) {
     if (openSM(byte[0], C_UA))
       READY = TRUE;
   }
+  state = Transmit;
+  send_message();
 
-  char cenas[4] = "yoyo";
-  llwrite(fd, cenas, strlen(cenas) + 1);
 
   printf("Write your words:\n");
   gets(output);

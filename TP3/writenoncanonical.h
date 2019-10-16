@@ -39,6 +39,7 @@
 #define REJ_1 0x81
 
 unsigned int NS = 0;
+enum state{ Set, Transmit, End}state;
 
 void timeout();
 void set_transmission();
