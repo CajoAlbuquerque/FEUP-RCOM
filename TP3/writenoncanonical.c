@@ -23,7 +23,6 @@ void timeout() { //handler of alarm
     }
     timeouts++;
     alarm(3);
-    timeouts = 0;
   } else {
     write(STDERR_FILENO, "Couldnt establish connection.",
           strlen("Couldnt establish connection."));
@@ -54,17 +53,19 @@ int llwrite(int fd, char *buffer, int length) {
       read_byte[1], input_byte[1];
   unsigned char bcc2 = 0, c_message;
   int j = 0, state = 0;
-  bool STOP_R = FALSE, RR = TRUE;
+  bool STOP_R = FALSE, resend = false;
 
   set_write[F1_INDEX] = FLAG;
   set_write[A_INDEX] = A;
 
+  unsigned char control;
   if (NS == 0) {
-    set_write[C_INDEX] = CONTROL_0;
+    control = CONTROL_0;
   } else
-    set_write[C_INDEX] = CONTROL_1;
+    control = CONTROL_1;
 
-  set_write[BCC_INDEX] = (A ^ C_SET);
+  set_write[C_INDEX] = control;
+  set_write[BCC_INDEX] = (A ^ control);
 
   for (unsigned int i = 0; i < length; i++) {
     // Byte stuffing
@@ -100,6 +101,8 @@ int llwrite(int fd, char *buffer, int length) {
     read(fd, input_byte, 1); /* returns after 5 chars have been input */
     read_byte[0] = input_byte[0];
 
+    printf("STATE %d\n", state);
+
     switch (state) {
     case 0:
       if (read_byte[0] == FLAG) {
@@ -113,23 +116,27 @@ int llwrite(int fd, char *buffer, int length) {
       break;
     case 2:
       if (read_byte[0] == RR_0) {
+        printf("RR0\n");
         c_message = RR_0;
         state++;
         NS = 0;
-        RR = true;
+        resend = FALSE;
       } else if (read_byte[0] == RR_1) {
+        printf("RR1\n");
         c_message = RR_1;
         state++;
         NS = 1;
-        RR = true;
+        resend = FALSE;
       } else if (read_byte[0] == REJ_0) {
+        printf("REJ0\n");
         c_message = REJ_0;
         state++;
-        RR = false;
+        resend = TRUE;
       } else if (read_byte[0] == REJ_1) {
+        printf("REJ1\n");
         c_message = REJ_1;
         state++;
-        RR = false;
+        resend = TRUE;
       } else if (read_byte[0] == FLAG) {
         state = 1;
       }
@@ -150,9 +157,18 @@ int llwrite(int fd, char *buffer, int length) {
     default:
       break;
     }
+
   }
+  printf("END\n");
   alarm(0);
-  if(!RR) send_message();
+
+  if(resend){
+    printf("END\n");
+    send_message();
+  }
+
+
+
   return 1;
 }
 
@@ -222,28 +238,26 @@ int main(int argc, char **argv) {
   send_message();
 
 
-  printf("Write your words:\n");
-  gets(output);
-  output[strlen(output)] = 0;
+  // printf("Write your words:\n");
+  // gets(output);
+  // output[strlen(output)] = 0;
+  //
+  // res = write(fd, output, strlen(output) + 1);
+  // if (res != strlen(output) + 1) {
+  //   write(STDERR_FILENO, "Word was not entirely sent.",
+  //         strlen("Word was not entirely sent."));
+  //   exit(-1);
+  // }
 
-  res = write(fd, output, strlen(output) + 1);
-  if (res != strlen(output) + 1) {
-    write(STDERR_FILENO, "Word was not entirely sent.",
-          strlen("Word was not entirely sent."));
-    exit(-1);
-  }
-
-  while (STOP == FALSE) {     /* loop for input */
-    res = read(fd, input, 1); /* returns after 5 chars have been input */
-    str[k] = input[0];
-    k++;
-    input[res] = 0; /* so we can printf... */
-    printf(":%s:%d\n", input, res);
-    if (input[0] == '\0')
-      STOP = TRUE;
-  }
-
-  printf("String:%s", str);
+  // while (STOP == FALSE) {     /* loop for input */
+  //   res = read(fd, input, 1); /* returns after 5 chars have been input */
+  //   str[k] = input[0];
+  //   k++;
+  //   input[res] = 0; /* so we can printf... */
+  //   printf(":%s:%d\n", input, res);
+  //   if (input[0] == '\0')
+  //     STOP = TRUE;
+  // }
 
   if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
     perror("tcsetattr");
