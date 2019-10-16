@@ -13,7 +13,7 @@ int write_SUframe(int fd, unsigned char control) {
   set[F2_INDEX] = FLAG;
 
   int res = write(fd, set, SET_SIZE);
-  printf("Sent RR\n");
+  printf("Sent %x\n", control);
 
   return res;
 }
@@ -25,29 +25,38 @@ int llread(int fd, unsigned char *buffer) {
   unsigned int data_ok = FALSE, repeated_data = FALSE;
   unsigned int escape_byte = FALSE;
 
+  STOP = FALSE;
   while (!STOP) {
     if (read(fd, byte, 1) < 0) {
       perror("llread");
       exit(-1);
     }
-    int state = readSM(byte[0]);
+    int state = readSM(byte[0], NR ? CONTROL_1 : CONTROL_0);
+    printf("STATE = %d\n", state);
 
 	if (state == C_RCV){ //Checking for repeated data
 		if(byte[0] == CONTROL_0 && NR == 1){
+      printf("REPEATED DATA 0\n");
 			write_SUframe(fd, RR_1);
+      repeated_data = TRUE;
 		} else if (byte[0] == CONTROL_1 && NR == 0) {
+      printf("REPEATED DATA 1\n");
 			write_SUframe(fd, RR_0);
+      repeated_data = TRUE;
 		}
-    repeated_data = TRUE;
 		/*
       When repeated data is sent by the transmitter,
       the receiver ignores all data in the frame.
     */
 	} else if (state == DATA_LOOP && !repeated_data) { //Data is being received
-      if (current_bcc2 == byte[0])
+      if (current_bcc2 == byte[0]){
+        printf("OK\n");
         data_ok = TRUE;
-      else
+      }
+      else{
+        printf("OK\n");
         data_ok = FALSE;
+      }
 
       current_bcc2 = current_bcc2 ^ byte[0];
 
@@ -86,8 +95,9 @@ int llread(int fd, unsigned char *buffer) {
       NR = 1;
       write_SUframe(fd, RR_1);
     }
-  } else
+  } else {
     NR ? write_SUframe(fd, REJ_1) : write_SUframe(fd, REJ_0);
+  }
 
   return current_index;
 }

@@ -42,7 +42,7 @@ int openSM(unsigned char byte, unsigned char control) {
   return FALSE;
 }
 
-int readSM(unsigned char byte) {
+int readSM(unsigned char byte, unsigned char control) {
   static int state = START;
   switch (state) {
   case START:
@@ -60,13 +60,13 @@ int readSM(unsigned char byte) {
   case A_RCV:
     if (byte == FLAG)
       state = FLAG_RCV;
-    else if (byte == C_SET)
+    else if (byte == control)
       state = C_RCV;
     else
       state = START;
     break;
   case C_RCV:
-    if (byte == (A ^ C_SET))
+    if (byte == (A ^ control))
       state = BCC_OK;
     else if (byte == FLAG)
       state = FLAG_RCV;

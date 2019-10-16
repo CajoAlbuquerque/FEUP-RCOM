@@ -30,6 +30,7 @@ int openSM(unsigned char byte, unsigned char control);
  * 	Receiver state machine to parse the data frame.
  *
  * 	@param byte Character to be processed
+ *  @param control Control character value expected
  *  @return current state
  */
-int readSM(unsigned char byte);
+int readSM(unsigned char byte, unsigned char control);
