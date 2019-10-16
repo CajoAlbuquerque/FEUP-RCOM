@@ -6,6 +6,11 @@ volatile int STOP = FALSE;
 volatile int READY = FALSE;
 enum state state = Set;
 
+void send_message(){
+  char cenas[4] = "yoyo";
+  llwrite(fd, cenas, strlen(cenas) + 1);
+}
+
 void timeout() { //handler of alarm
   static int timeouts = 1;
 
@@ -15,10 +20,10 @@ void timeout() { //handler of alarm
       set_transmission();
     } else if(state == Transmit){
       send_message();
-    } 
+    }
     timeouts++;
     alarm(3);
-    timeout = 0;
+    timeouts = 0;
   } else {
     write(STDERR_FILENO, "Couldnt establish connection.",
           strlen("Couldnt establish connection."));
@@ -44,14 +49,9 @@ void set_transmission() {
   }
 }
 
-void send_message(){ 
-  char cenas[4] = "yoyo";
-  llwrite(fd, cenas, strlen(cenas) + 1);
-}
-
 int llwrite(int fd, char *buffer, int length) {
   unsigned char set_write[SET_SIZE + 2 * (length) + 1], set_receive[SET_SIZE],
-      read_byte[1], input_byte;
+      read_byte[1], input_byte[1];
   unsigned char bcc2 = 0, c_message;
   int j = 0, state = 0;
   bool STOP_R = FALSE, RR = TRUE;
@@ -82,7 +82,7 @@ int llwrite(int fd, char *buffer, int length) {
       set_write[BCC_INDEX + i + 1 + j] = buffer[i];
     }
 
-    /* 
+    /*
       Since bcc2 starts at 0, bcc2 ^ buffer[0] = buffer[0].
       This way we avoid an irrelevant condition.
       Additionally, as buffer remains unchanged, bcc2 wil not be affected by stuffing
@@ -98,7 +98,7 @@ int llwrite(int fd, char *buffer, int length) {
   //TODO: fazer um alarme para timeout e reenviar dados
   while (STOP_R == FALSE) {  /* loop for input */
     read(fd, input_byte, 1); /* returns after 5 chars have been input */
-    read_byte[0] = input_byte;
+    read_byte[0] = input_byte[0];
 
     switch (state) {
     case 0:

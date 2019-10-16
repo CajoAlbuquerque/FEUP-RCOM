@@ -19,3 +19,4 @@ statemachine.o: statemachine.c statemachine.h
 clean:
 	rm -f $(EXEC)
 	rm -f *.o
+	rm -f wnserial
