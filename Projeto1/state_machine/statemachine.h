@@ -9,7 +9,7 @@
  *  @param state State of the machine before reading byte
  *  @return State of the machine after reading byte
  */
-int openSM(unsigned char byte, unsigned char control, int state);
+int suFrameSM(unsigned char byte, unsigned char control, int state);
 
 /**
  * 	Receiver state machine to parse the data frame.
