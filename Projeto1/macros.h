@@ -11,7 +11,7 @@
 #define C_INDEX 2
 #define BCC_INDEX 3
 #define F2_INDEX 4
-#define SET_FRAME_SIZE 5
+#define SU_FRAME_SIZE 5
 
 // Flag and A characters values
 #define FLAG 0x7e
