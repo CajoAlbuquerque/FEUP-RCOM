@@ -14,12 +14,7 @@
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS1"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
-#define FALSE 0
-#define TRUE 1
-#define FLAG 0x7e
-#define A 0x03
-#define C_SET 0x03
-#define C_UA 0x07
+
 #define F1_INDEX 0
 #define A_INDEX 1
 #define C_INDEX 2
@@ -39,9 +34,10 @@
 #define REJ_1 0x81
 
 unsigned int NS = 0;
-enum state{ Set, Transmit, End}state;
+enum fase{ Set, Transmit, End}fase;
 
 void timeout();
 void set_transmission();
+void send_frameSU(unsigned char control);
 int llwrite(int fd, char *buffer, int length);
 int main(int argc, char **argv);
