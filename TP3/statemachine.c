@@ -65,9 +65,10 @@ int readSM(unsigned char byte) {
   case A_RCV:
     if (byte == FLAG)
       state = FLAG_RCV;
-    else if (isControl(byte))
+    else if (isControl(byte)){
       control = byte;
       state = C_RCV;
+    }
     else
       state = START;
     break;
