@@ -18,8 +18,6 @@
 #define F2_INDEX 4
 #define SET_SIZE 5
 
-#define CONTROL_0 0x00
-#define CONTROL_1 0x40
 #define RR_0 0x05
 #define RR_1 0x85
 #define REJ_0 0x01

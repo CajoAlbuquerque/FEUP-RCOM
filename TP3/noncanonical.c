@@ -31,7 +31,7 @@ int llread(int fd, unsigned char *buffer) {
       perror("llread");
       exit(-1);
     }
-    int state = readSM(byte[0], NR ? CONTROL_1 : CONTROL_0); //TODO: fix transition
+    int state = readSM(byte[0]); 
     printf("STATE = %d\n", state);
 
 	if (state == C_RCV){ //Checking for repeated data
@@ -74,7 +74,7 @@ int llread(int fd, unsigned char *buffer) {
         buffer[current_index] = byte[0];
         current_index++;
       }
-      
+      printf("DATA: %x\n", byte[0]);
       current_bcc2 = current_bcc2 ^ buffer[current_index - 1];
     } else if (state == END) {
       STOP = TRUE;

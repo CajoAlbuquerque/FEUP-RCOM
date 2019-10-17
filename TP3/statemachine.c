@@ -1,5 +1,9 @@
 #include "statemachine.h"
 
+int isControl(unsigned char byte) {
+  return  byte == CONTROL_0 || byte == CONTROL_1;
+}
+
 int openSM(unsigned char byte, unsigned char control) {
   static int state = START;
   switch (state) {
@@ -42,8 +46,9 @@ int openSM(unsigned char byte, unsigned char control) {
   return FALSE;
 }
 
-int readSM(unsigned char byte, unsigned char control) {
+int readSM(unsigned char byte) {
   static int state = START;
+  static unsigned char control;
   switch (state) {
   case START:
     if (byte == FLAG)
@@ -60,7 +65,8 @@ int readSM(unsigned char byte, unsigned char control) {
   case A_RCV:
     if (byte == FLAG)
       state = FLAG_RCV;
-    else if (byte == control)
+    else if (isControl(byte))
+      control = byte;
       state = C_RCV;
     else
       state = START;
