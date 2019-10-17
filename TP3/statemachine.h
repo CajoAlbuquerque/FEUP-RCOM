@@ -39,4 +39,4 @@ int openSM(unsigned char byte, unsigned char control);
  * 	@param byte Character to be processed
  *  @return current state
  */
-int readSM(unsigned char byte);
+int readSM(unsigned char byte, int state);

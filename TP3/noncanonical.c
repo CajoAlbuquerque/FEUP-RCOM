@@ -3,6 +3,27 @@
 
 volatile int STOP = FALSE;
 
+void processDisc(int fd) {
+  unsigned char byte[1];
+
+  write_SUframe(fd, C_DISC);
+  printf("Sent DISC\n");
+  
+  STOP = FALSE;
+  while(!STOP) {
+    if (read(fd, byte, 1) < 0) {
+      perror("llread");
+      exit(-1);
+    }
+
+    int state = openSM(byte[0], C_UA);
+    if(state)
+      STOP = TRUE;
+  }
+
+  printf("Received UA\n");
+}
+
 int write_SUframe(int fd, unsigned char control) {
   unsigned char set[SET_SIZE];
 
@@ -22,8 +43,10 @@ int llread(int fd, unsigned char *buffer) {
   unsigned char current_bcc2 = 0;
   unsigned char byte[1];
   unsigned int current_index = 0;
+  int state = START;
   unsigned int data_ok = FALSE, repeated_data = FALSE;
   unsigned int escape_byte = FALSE;
+  unsigned int send_disc = FALSE;
 
   STOP = FALSE;
   while (!STOP) {
@@ -31,8 +54,7 @@ int llread(int fd, unsigned char *buffer) {
       perror("llread");
       exit(-1);
     }
-    int state = readSM(byte[0]); 
-    printf("STATE = %d\n", state);
+    state = readSM(byte[0], state); 
 
 	if (state == C_RCV){ //Checking for repeated data
 		if(byte[0] == CONTROL_0 && NR == 1){
@@ -43,7 +65,10 @@ int llread(int fd, unsigned char *buffer) {
       printf("REPEATED DATA 1\n");
 			write_SUframe(fd, RR_0);
       repeated_data = TRUE;
-		}
+		} else if (byte[0] == C_DISC) {
+      printf("Send Disc True\n");
+      send_disc = TRUE;
+    }
 		/*
       When repeated data is sent by the transmitter,
       the receiver ignores all data in the frame.
@@ -74,7 +99,7 @@ int llread(int fd, unsigned char *buffer) {
         buffer[current_index] = byte[0];
         current_index++;
       }
-      printf("DATA: %x\n", byte[0]);
+      
       current_bcc2 = current_bcc2 ^ buffer[current_index - 1];
     } else if (state == END) {
       STOP = TRUE;
@@ -85,7 +110,11 @@ int llread(int fd, unsigned char *buffer) {
   if(repeated_data)
     return 0;
 
-  if (data_ok) {
+  if (send_disc) {
+    processDisc(fd);
+    return -1;
+  }
+  else if (data_ok) {
     if (NR) {
       NR = 0;
       write_SUframe(fd, RR_0);
@@ -177,10 +206,13 @@ int main(int argc, char **argv) {
   printf("Send\n");
   //-----------------------------------------------FIM DO READ OPEN
   unsigned char msg[256];
+  int bytes_read = 0;
+  while(bytes_read >= 0) {
+    bytes_read = llread(fd, msg);
+    if(bytes_read > 0)
+      printf("Message: %s\n", msg);
+  }
 
-  llread(fd, msg);
-
-  printf("Message: %s\n", msg);
 
   sleep(1);
 

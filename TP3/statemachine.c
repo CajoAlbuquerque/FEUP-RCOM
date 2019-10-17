@@ -1,7 +1,7 @@
 #include "statemachine.h"
 
 int isControl(unsigned char byte) {
-  return  byte == CONTROL_0 || byte == CONTROL_1;
+  return  byte == CONTROL_0 || byte == CONTROL_1 || byte == C_DISC;
 }
 
 int openSM(unsigned char byte, unsigned char control) {
@@ -36,8 +36,10 @@ int openSM(unsigned char byte, unsigned char control) {
       state = START;
     break;
   case BCC_OK:
-    if (byte == FLAG)
+    if (byte == FLAG){
+      state = START;
       return TRUE;
+    }
     else
       state = START;
     break;
@@ -46,8 +48,7 @@ int openSM(unsigned char byte, unsigned char control) {
   return FALSE;
 }
 
-int readSM(unsigned char byte) {
-  static int state = START;
+int readSM(unsigned char byte, int state) {
   static unsigned char control;
   switch (state) {
   case START:
@@ -81,7 +82,9 @@ int readSM(unsigned char byte) {
       state = START;
     break;
   case BCC_OK:
-    if (byte == FLAG)
+    if (byte == FLAG && control == C_DISC)
+      state = END;
+    else if (byte == FLAG)
       state = FLAG_RCV;
     else
       state = DATA_LOOP;
