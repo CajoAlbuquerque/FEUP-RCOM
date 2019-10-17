@@ -4,24 +4,25 @@
 int fd;
 volatile int STOP = FALSE;
 volatile int READY = FALSE;
-enum state state = Set;
+enum fase fase = Set;
+int timeouts = 0;
 
 void send_message(){
-  char cenas[4] = "yoyo";
-  llwrite(fd, cenas, strlen(cenas) + 1);
+  char cenas[6] = "yo}}yo";
+  llwrite(fd, cenas, strlen(cenas));
 }
 
 void timeout() { //handler of alarm
-  static int timeouts = 1;
-
+  timeouts++;
   if (timeouts < 3) {
     printf("Resent\n");
-    if(state == Set){
-      set_transmission();
-    } else if(state == Transmit){
+    if(fase == Set){
+      send_frameSU(C_SET); //resend set_transmission
+    } else if(fase == Transmit){
       send_message();
+    } else {
+      send_frameSU(C_DISC);
     }
-    timeouts++;
     alarm(3);
   } else {
     write(STDERR_FILENO, "Couldnt establish connection.",
@@ -30,14 +31,14 @@ void timeout() { //handler of alarm
   }
 }
 
-void set_transmission() {
+void send_frameSU(unsigned char control) {
   unsigned char set[SET_SIZE];
   int set_res;
 
   set[F1_INDEX] = FLAG;
   set[A_INDEX] = A;
-  set[C_INDEX] = C_SET;
-  set[BCC_INDEX] = (A ^ C_SET);
+  set[C_INDEX] = control;
+  set[BCC_INDEX] = (A ^ control);
   set[F2_INDEX] = FLAG;
 
   set_res = write(fd, set, SET_SIZE);
@@ -46,14 +47,13 @@ void set_transmission() {
           strlen("Set message was not entirely sent."));
     exit(-1);
   }
+  alarm(3); //for time out
 }
 
 int llwrite(int fd, char *buffer, int length) {
-  unsigned char set_write[SET_SIZE + 2 * (length) + 1], set_receive[SET_SIZE],
-      read_byte[1], input_byte[1];
-  unsigned char bcc2 = 0, c_message;
-  int j = 0, state = 0;
-  bool STOP_R = FALSE, resend = false;
+  unsigned char set_write[SET_SIZE + 2 * (length) + 1];
+  unsigned char bcc2 = 0;
+  int j = 0;
 
   set_write[F1_INDEX] = FLAG;
   set_write[A_INDEX] = A;
@@ -67,7 +67,7 @@ int llwrite(int fd, char *buffer, int length) {
   set_write[C_INDEX] = control;
   set_write[BCC_INDEX] = (A ^ control);
 
-  for (unsigned int i = 0; i < length; i++) {
+  for (int i = 0; i < length; i++) {
     // Byte stuffing
     if (buffer[i] == ESC) {
       set_write[BCC_INDEX + i + 1 + j] = ESC;
@@ -95,8 +95,16 @@ int llwrite(int fd, char *buffer, int length) {
   set_write[BCC_INDEX + length + 2 + j] = FLAG;
 
   write(fd, set_write, SET_SIZE + length + j + 1);
+  alarm(3);
+  return 0;
+}
 
-  //TODO: fazer um alarme para timeout e reenviar dados
+void  receive_confimation() {
+  bool STOP_R = FALSE, resend = false;
+  unsigned char c_message;
+  unsigned char read_byte[1], input_byte[1];
+  int state = 0;
+
   while (STOP_R == FALSE) {  /* loop for input */
     read(fd, input_byte, 1); /* returns after 5 chars have been input */
     read_byte[0] = input_byte[0];
@@ -167,18 +175,28 @@ int llwrite(int fd, char *buffer, int length) {
     send_message();
   }
 
+}
+
+int receive_frameSU(unsigned char control){
+  int set_res;
+  unsigned char byte[1];
+  unsigned char READY = FALSE;
+  //waits for the frame DISC
+  while (READY == FALSE) {
+    set_res = read(fd, byte, 1);
+
+    if (set_res > 0)
+      alarm(0);
 
 
-  return 1;
+    if (openSM(byte[0], control))
+      READY = TRUE;
+  }
+  return 0;
 }
 
 int main(int argc, char **argv) {
-  int res, set_res, state = 0;
   struct termios oldtio, newtio;
-  char input[255], output[255], str[255];
-  unsigned char set[SET_SIZE], set_reception[SET_SIZE];
-  unsigned char byte[1];
-  int k = 0;
 
   (void)signal(SIGALRM, timeout);
 
@@ -221,22 +239,28 @@ int main(int argc, char **argv) {
 
   printf("Set is set!\n");
 
-  set_transmission();
+  send_frameSU(C_SET);
+  printf("Send SET\n");
 
-  alarm(3);
-  while (READY == FALSE) {
-    set_res = read(fd, byte, 1);
+  receive_frameSU(C_UA);
+  printf("Receive UA\n");
 
-    if (set_res > 0) {
-      alarm(0);
-    }
-
-    if (openSM(byte[0], C_UA))
-      READY = TRUE;
-  }
-  state = Transmit;
+  timeouts = 0; //resent because is possible that were timeouts in set_transmission
+  fase = Transmit;
   send_message();
+  receive_confimation();
 
+  fase = End;
+  timeouts = 0;
+  send_frameSU(C_DISC); //Send Disconect
+  printf("Send C_DISC\n");
+
+  receive_frameSU(C_DISC);
+  printf("Receive DISC\n");
+
+  //if receive C_DISC send UA
+  send_frameSU(C_UA);
+  printf("Send C_UA \n" );
 
   // printf("Write your words:\n");
   // gets(output);
