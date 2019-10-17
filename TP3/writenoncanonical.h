@@ -34,7 +34,11 @@
 #define REJ_1 0x81
 
 unsigned int NS = 0;
-enum fase{ Set, Transmit, End}fase;
+typedef enum { 
+    Set,
+    Transmit,
+    End
+} phase_t;
 
 void timeout();
 void set_transmission();
