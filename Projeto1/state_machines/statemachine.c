@@ -1,7 +1,6 @@
 #include "statemachine.h"
-#include "macros.h"
 
-int openSM(unsigned char byte, unsigned char control) {
+int openSM(unsigned char byte, unsigned char control, int state) {
   static int state = START;
   switch (state) {
   case START:
@@ -34,17 +33,17 @@ int openSM(unsigned char byte, unsigned char control) {
     break;
   case BCC_OK:
     if (byte == FLAG)
-      return TRUE;
+      state = END;
     else
       state = START;
     break;
   }
 
-  return FALSE;
+  return state;
 }
 
-int readSM(unsigned char byte) {
-  static int state = START;
+int readSM(unsigned char byte, int state) {
+  static unsigned char control;
   switch (state) {
   case START:
     if (byte == FLAG)
@@ -61,13 +60,15 @@ int readSM(unsigned char byte) {
   case A_RCV:
     if (byte == FLAG)
       state = FLAG_RCV;
-    else if (byte == C_SET)
+    else if (byte == CONTROL_0 || byte == CONTROL_1 || byte == C_DISC){
+      control = byte;
       state = C_RCV;
+    }
     else
       state = START;
     break;
   case C_RCV:
-    if (byte == (A ^ C_SET))
+    if (byte == (A ^ control))
       state = BCC_OK;
     else if (byte == FLAG)
       state = FLAG_RCV;
@@ -75,7 +76,9 @@ int readSM(unsigned char byte) {
       state = START;
     break;
   case BCC_OK:
-    if (byte == FLAG)
+    if (byte == FLAG && control == C_DISC)
+      state = END;
+    else if (byte == FLAG)
       state = FLAG_RCV;
     else
       state = DATA_LOOP;

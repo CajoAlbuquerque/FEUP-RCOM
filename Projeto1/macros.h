@@ -1,3 +1,5 @@
+#pragma once
+
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
@@ -18,6 +20,7 @@
 // Control character values for SU frames
 #define C_SET 0x03
 #define C_UA 0x07
+#define C_DISC 0x0B
 #define RR_0 0x05
 #define RR_1 0x85
 #define REJ_0 0x01
@@ -30,7 +33,17 @@
 // Stuffing bytes
 #define ESC 0x7d
 #define ESC_SOL 0x5d
+#define FLAG_SOL 0x5e
 
 // Timeout related values
 #define TIMEOUT_INTERVAL 3
 #define TIMEOUT_MAX_ATTEMPTS 3
+
+// State Machine states
+#define START 0
+#define FLAG_RCV 1
+#define A_RCV 2
+#define C_RCV 3
+#define BCC_OK 4
+#define DATA_LOOP 5
+#define END 6

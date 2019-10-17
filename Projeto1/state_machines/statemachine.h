@@ -1,27 +1,21 @@
-// States for all state machines
-#define START 0
-#define FLAG_RCV 1
-#define A_RCV 2
-#define C_RCV 3
-#define BCC_OK 4
-#define DATA_LOOP 5
-#define BCC2_OK 6
-#define END 7
+#include "../macros.h"
 
 /**
- *  State machine to processes the comunication establishment.
+ *  State machine to process a supervision or unumbered frame.
+ *  The frame's expected control character must be passed as an argument.
  *
  *  @param byte Character to be processed
- *  @param control Control character value (C_SET for receiver and C_UA for
- * transmitter)
- *  @return 1 if the end state has been reached, 0 otherwise.
+ *  @param control Expected control character value
+ *  @param state State of the machine before reading byte
+ *  @return State of the machine after reading byte
  */
-int openSM(unsigned char byte, unsigned char control);
+int openSM(unsigned char byte, unsigned char control, int state);
 
 /**
  * 	Receiver state machine to parse the data frame.
  *
  * 	@param byte Character to be processed
- *  @return current state
+ *  @param state State of the machine before reading byte
+ *  @return State of the machine after reading byte
  */
-int readSM(unsigned char byte);
+int readSM(unsigned char byte, int state);
