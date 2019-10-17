@@ -31,7 +31,7 @@ int llread(int fd, unsigned char *buffer) {
       perror("llread");
       exit(-1);
     }
-    int state = readSM(byte[0], NR ? CONTROL_1 : CONTROL_0);
+    int state = readSM(byte[0], NR ? CONTROL_1 : CONTROL_0); //TODO: fix transition
     printf("STATE = %d\n", state);
 
 	if (state == C_RCV){ //Checking for repeated data
@@ -49,24 +49,21 @@ int llread(int fd, unsigned char *buffer) {
       the receiver ignores all data in the frame.
     */
 	} else if (state == DATA_LOOP && !repeated_data) { //Data is being received
-      if (current_bcc2 == byte[0]){
-        printf("OK\n");
+      if (current_bcc2 == byte[0]){ // If current byte is bcc2 would data be ok?
         data_ok = TRUE;
       }
       else{
-        printf("OK\n");
         data_ok = FALSE;
       }
 
-      current_bcc2 = current_bcc2 ^ byte[0];
-
       if(byte[0] == ESC){//byte used for stuffing
         escape_byte = TRUE;
+        continue;
       }         
       else if(escape_byte == TRUE){ //destuffing the byte
         if(byte[0] == 0x5e)
           buffer[current_index] = 0x7e; //original byte was 0x7e
-        //byte[0] = 0x5d
+          //byte[0] = 0x5d
         else {
           buffer[current_index] = 0x7d; //original byte was 0x7d
         }
@@ -78,6 +75,7 @@ int llread(int fd, unsigned char *buffer) {
         current_index++;
       }
       
+      current_bcc2 = current_bcc2 ^ buffer[current_index - 1];
     } else if (state == END) {
       STOP = TRUE;
     }
@@ -181,6 +179,8 @@ int main(int argc, char **argv) {
   unsigned char msg[256];
 
   llread(fd, msg);
+
+  printf("Message: %s\n", msg);
 
   sleep(1);
 
