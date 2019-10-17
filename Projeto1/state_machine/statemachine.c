@@ -1,4 +1,5 @@
 #include "statemachine.h"
+#include "../macros.h"
 
 int openSM(unsigned char byte, unsigned char control, int state) {
   static int state = START;

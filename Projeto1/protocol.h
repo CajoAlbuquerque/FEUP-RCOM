@@ -12,7 +12,7 @@
  *  @param port Serial port to use; use values from 0 to 3
  *  @param mode Flag to switch between TRANSMITTER and RECEIVER modes
  *
- *  @return Connection port file descriptor if OK, -1 on error.
+ *  @return Connection port file descriptor on success, -1 on error.
  */
 int llopen(int port, int mode);
 
@@ -22,7 +22,7 @@ int llopen(int port, int mode);
  *  @param fd File descriptor of the serial port
  *  @param buffer Array of characters on which the data will be saved
  *
- *  @return Number of characters read (buffer length) if OK, -1 otherwise.
+ *  @return Number of characters read (buffer length) on success, -1 otherwise.
  */
 int llread(int fd, unsigned char *buffer);
 
@@ -33,7 +33,7 @@ int llread(int fd, unsigned char *buffer);
  *  @param buffer Array of characters to be written
  *  @param length Array's length
  *
- *  @return Number of written characters if OK, -1 otherwise.
+ *  @return Number of written characters on success, -1 otherwise.
  */
 int llwrite(int fd, unsigned char *buffer, int length);
 
@@ -42,6 +42,6 @@ int llwrite(int fd, unsigned char *buffer, int length);
  *
  *  @param fd File descriptor of the serial port
  *
- *  @return 0 if OK, -1 otherwise.
+ *  @return 0 on success, -1 otherwise.
  */
 int llclose(int fd);
