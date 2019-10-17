@@ -12,7 +12,7 @@
  *  @param port Serial port to use; use values from 0 to 3
  *  @param mode Flag to switch between TRANSMITTER and RECEIVER modes
  *
- *  @return Connection port file descriptor if OK, -1 otherwise.
+ *  @return Connection port file descriptor if OK, -1 on error.
  */
 int llopen(int port, int mode);
 
