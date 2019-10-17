@@ -4,11 +4,6 @@ typedef enum {
     close
 } phase_t;
 
-// This variables are static so no one can access them from other files.
-static int serial_fd; /**< Serial port file descriptor. Used for frame retransmissions. */
-static int timeouts = 0; /**< Number of timeouts ocurred. */
-static phase_t phase; /**< Connection's phase. Can be open, data or close. */
-
 /**
  *  Sets phase variable value.
  * 
