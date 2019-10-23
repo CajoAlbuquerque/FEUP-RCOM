@@ -1,8 +1,9 @@
 #include "application.h"
-#include "protocol.h"
+#include "../protocol/protocol.h"
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 unsigned char* getCharBuffer(unsigned char *filename, int *fileSize){
     FILE *f;
@@ -24,34 +25,58 @@ unsigned char* getCharBuffer(unsigned char *filename, int *fileSize){
     return fileData;
 
 }
+unsigned char* dataPacket(int sendSize, int sequenceNumber, unsigned char* filename){
+    int count = 0;
+    unsigned char *fileData = (unsigned char *)malloc(sendSize);
 
-int dataPacket(int sendSize){
-  /*  unsigned char set[SU_FRAME_SIZE];
+    fileData[0] = sendSize;
+    fileData[1] = sequenceNumber;
 
-    set[F1_INDEX] = FLAG;
-    set[A_INDEX] = A;
-    set[C_INDEX] = control;
-    set[BCC_INDEX] = A ^ control;
-    set[F2_INDEX] = FLAG;*/
+    int L2 =  1;
+    int L1 = sendSize - 256 * L2;
 
-    if (write(fd, set, SU_FRAME_SIZE) <= 0) {
-        return -1;
+    fileData[2] = L2;
+    fileData[3] = L1;
+    while(count <= sendSize){
+        fileData[4+count] = filename + count;
     }
+
+    return fileData;
+}
+
+int controlPacket(unsigned int control, int fileSize, unsigned char filename){
+    int count = 0;
+    unsigned char set[7];
+
+    set[0] = control;
+    set[1] = fileSize;
+
+ //TODO
+
     return 0;
 }
 
 int sendFile(unsigned char *filename){
-    int fileSize, sendSize = 0;
-    unsigned char *fileData;
+    int fileSize, sendSize = 0, sequenceNumber = 0;
+    unsigned char *fileData, *dataSend;
     fileData = getCharBuffer((unsigned char*) filename, &fileSize);
-    if((fileSize - sendSize) > 200){ //max is 258
-        dataPacket(200);
+    controlPacket(0x02, fileSize, filename);
+    while((fileSize - sendSize) > 200){ //max is 256
+        *dataSend = dataPacket(200, sequenceNumber, filename);
+        llwrite(application.fileDescriptor, dataSend, &fileSize);
+        free(dataSend);
     } 
-    llwrite(application.fileDescriptor, fileData, &fileSize);
+    if((fileSize - sendSize) > 0){ //max is 256
+        *dataSend = dataPacket((fileSize - sendSize), sequenceNumber, filename);
+        llwrite(application.fileDescriptor, dataSend, &fileSize);
+        free(dataSend);
+    } 
+    
+    controlPacket(0x03, fileSize, filename);
 }
 
 int main(int argc, char **argv){
-        
+    unsigned char *fileData;
     application.status = argv[2];
 
     if ((argc < 2) || ((strcmp("/dev/ttyS0", argv[1]) != 0) &&

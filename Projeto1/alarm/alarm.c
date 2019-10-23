@@ -1,6 +1,6 @@
 #include "alarm.h"
 #include "../macros.h"
-#include "transmitter/transmitter.h"
+#include "../transmitter/transmitter.h"
 #include <signal.h>
 #include <stdio.h>
 
