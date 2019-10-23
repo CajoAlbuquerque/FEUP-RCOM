@@ -31,7 +31,8 @@ void timeoutHandler(int signo) {
     if (phase == open) {
       write_suFrame(serial_fd, C_SET);
     } else if (phase == data) {
-      sendMessage(serial_fd);
+      printf("Alarm on data phase\n");
+      sendMessage(serial_fd); //TODO: FIX
     } else if (phase == close) {
       write_suFrame(serial_fd, C_DISC);
     }

@@ -21,12 +21,14 @@ static struct termios oldtio;
  *  @param port Serial port number
  *  @return Serial port file descriptor
  */
-int initSerialPort(int port) {
+int initSerialPort(int port)
+{
   struct termios newtio;
   char serialPort[11];
   int fd;
 
-  switch (port) {
+  switch (port)
+  {
   case 0:
     strcpy(serialPort, "/dev/ttyS0");
     break;
@@ -46,12 +48,14 @@ int initSerialPort(int port) {
   }
 
   fd = open(serialPort, O_RDWR | O_NOCTTY);
-  if (fd < 0) {
+  if (fd < 0)
+  {
     perror(serialPort);
     return -1;
   }
 
-  if (tcgetattr(fd, &oldtio) == -1) { /* save current port settings */
+  if (tcgetattr(fd, &oldtio) == -1)
+  { /* save current port settings */
     perror("tcgetattr");
     return -1;
   }
@@ -67,7 +71,8 @@ int initSerialPort(int port) {
 
   tcflush(fd, TCIOFLUSH);
 
-  if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
+  if (tcsetattr(fd, TCSANOW, &newtio) == -1)
+  {
     perror("tcsetattr");
     return -1;
   }
@@ -84,8 +89,10 @@ int initSerialPort(int port) {
  *  @param port Serial port number
  *  @return Serial port file descriptor
  */
-int closeSerialPort(int fd) {
-  if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
+int closeSerialPort(int fd)
+{
+  if (tcsetattr(fd, TCSANOW, &oldtio) == -1)
+  {
     perror("tcsetattr");
     return -1;
   }
@@ -93,32 +100,38 @@ int closeSerialPort(int fd) {
   close(fd);
 }
 
-int llopen(int port, int mode) {
+int llopen(int port, int mode)
+{
   int fd = initSerialPort(port);
 
   if (initializeHandler(fd) == -1)
     return -1;
 
-  switch (mode) {
+  switch (mode)
+  {
   case TRANSMITTER:
-    if (write_suFrame(fd, C_SET) == -1) {
+    if (write_suFrame(fd, C_SET) == -1)
+    {
       return -1;
     }
     printf("Sent SET\n");
 
-    if (read_suFrame(fd, C_UA) == -1) {
+    if (read_suFrame(fd, C_UA) == -1)
+    {
       return -1;
     }
     printf("Received UA\n");
     break;
 
   case RECEIVER:
-    if (read_suFrame(fd, C_SET) == -1) {
+    if (read_suFrame(fd, C_SET) == -1)
+    {
       return -1;
     }
     printf("Received SET\n");
 
-    if (write_suFrame(fd, C_UA) == -1) {
+    if (write_suFrame(fd, C_UA) == -1)
+    {
       return -1;
     }
     printf("Sent UA\n");
@@ -131,19 +144,30 @@ int llopen(int port, int mode) {
   return fd;
 }
 
-int llwrite(int fd, char *buffer, int length) {
+int llwrite(int fd, char *buffer, int length)
+{
   unsigned char bcc2 = 0;
+  unsigned char control;
   int j = 0, result;
 
   setPhase(data);
 
   parseMessage(buffer, length);
 
-  do{
-  	control = send_message(fd);
-  }while(!parseControl(control));
+  do
+  {
+    result = sendMessage(fd);
 
-  return 0;
+    if (result < 0)
+    {
+      perror("sendMessage");
+      break;
+    }
+    control = read_responseFrame(fd);
+
+  } while (!parseControl(control));
+
+  return result;
 }
 
 int llread(int fd, unsigned char *buffer)
@@ -238,23 +262,7 @@ int llread(int fd, unsigned char *buffer)
     return -1;
   }
 
-  if (flags.data_ok)
-  {
-    if (NR)
-    {
-      NR = 0;
-      write_SUframe(fd, RR_0);
-    }
-    else
-    {
-      NR = 1;
-      write_SUframe(fd, RR_1);
-    }
-  }
-  else
-  {
-    NR ? write_SUframe(fd, REJ_1) : write_SUframe(fd, REJ_0);
-  }
+  writeResponse(fd);
 
   return current_index;
 }

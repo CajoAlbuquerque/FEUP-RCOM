@@ -18,5 +18,3 @@ void initFlags(flags_t flags);
  *  @return 0 in case of success; -1 on error.
  */
 int read_suFrame(int fd, unsigned char control);
-
-int read_responseFrame(int fd);
