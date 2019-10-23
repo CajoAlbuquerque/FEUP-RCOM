@@ -10,7 +10,7 @@ static int timeouts = 0; /**< Number of timeouts ocurred. */
 static phase_t phase; /**< Connection's phase. Can be open, data or close. */
 
 void setPhase(phase_t new_phase) { phase = new_phase; }
-
+                                                                                                                                                                   
 void resetTimeouts() { timeouts = 0; }
 
 int initializeHandler(int fd) {
@@ -29,9 +29,9 @@ void timeoutHandler(int signo) {
   timeouts++;
   if (timeouts < TIMEOUT_MAX_ATTEMPTS) {
     if (phase == open) {
-      write_suFrame(serial_fd, C_SET); // resend set_transmission
+      write_suFrame(serial_fd, C_SET);
     } else if (phase == data) {
-      //   send_message(); TODO: resend data
+      sendMessage(serial_fd);
     } else if (phase == close) {
       write_suFrame(serial_fd, C_DISC);
     }

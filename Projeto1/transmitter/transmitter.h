@@ -6,4 +6,10 @@
  *  @param control Expected control character value
  *  @return 0 in case of success; -1 on error.
  */
-int write_suFrame(int fd, unsigned char control)
+int write_suFrame(int fd, unsigned char control);
+
+int parseMessage(char *buffer, int length);
+
+int sendMessage(int fd);
+
+int parseControl(unsigned char control);

@@ -33,7 +33,6 @@
 // Stuffing bytes
 #define ESC 0x7d
 #define ESC_SOL 0x5d
-<<<<<<< HEAD
 #define FLAG_SOL 0x5e
 
 // Timeout related values
@@ -48,9 +47,4 @@
 #define BCC_OK 4
 #define DATA_LOOP 5
 #define END 6
-=======
 
-// Timeout related values
-#define TIMEOUT_INTERVAL 3
-#define TIMEOUT_MAX_ATTEMPTS 3
->>>>>>> 936d624f48d6d0fb3fd8cba78fec20d47eea7ffe
