@@ -1,8 +1,9 @@
 #include "application.h"
-#include "protocol.h"
+#include "../protocol/protocol.h"
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 unsigned char* getCharBuffer(unsigned char *filename, int *fileSize){
     FILE *f;
