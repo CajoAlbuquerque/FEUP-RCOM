@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -98,6 +99,7 @@ int closeSerialPort(int fd)
   }
 
   close(fd);
+  return 0;
 }
 
 int llopen(int port, int mode)
@@ -106,6 +108,8 @@ int llopen(int port, int mode)
 
   if (initializeHandler(fd) == -1)
     return -1;
+
+  setPhase(open_phase);
 
   switch (mode)
   {
@@ -144,41 +148,70 @@ int llopen(int port, int mode)
   return fd;
 }
 
-int llread(int fd, char *buffer)
+int llread(int fd, unsigned char *buffer)
 {
   unsigned int result;
+  unsigned int NR = getNR();
   flags_t flags;
-  initFlags(flags);
+  initFlags(&flags);
 
   result = read_dataFrame(fd, buffer, &flags);
 
   //When there is repeated data, buffer will have no content
-  if (flags.repeated_data)
+  if (flags.repeated_data){
+    if(NR == 1)
+      write_suFrame(fd, RR_1);
+    else
+      write_suFrame(fd, RR_0);
+
     return 0;
-
-  if (flags.send_disc)
-  {
-    write_suFrame(fd, C_DISC);
-    printf("Sent DISC\n");
-
-    read_suFrame(fd, C_UA);
-    printf("Received UA\n");
-
-    return -1;
   }
 
-  writeResponse(fd, flags.data_ok);
+  //When DISC is received, buffer will have no content
+  if (flags.send_disc)
+  {
+    if(write_suFrame(fd, C_DISC) < 0)
+      return -1;
+    printf("Sent DISC\n");
+
+    if(read_suFrame(fd, C_UA) < 0)
+      return -1;
+    printf("Received UA\n");
+
+    closeSerialPort(fd);
+    return 0;
+  }
+
+  if (flags.data_ok)
+  {
+    if (NR == 1)
+    {
+      setNR(0);
+      write_suFrame(fd, RR_0);
+    }
+    else
+    {
+      setNR(0);
+      write_suFrame(fd, RR_1);
+    }
+  }
+  else
+  {
+    if (NR == 1)
+      write_suFrame(fd, REJ_1);
+    else
+      write_suFrame(fd, REJ_0);
+  }
 
   return result;
 }
 
-int llwrite(int fd, char *buffer, int length)
+int llwrite(int fd, unsigned char *buffer, int length)
 {
-  unsigned char bcc2 = 0;
   unsigned char control;
-  int j = 0, result;
+  int result;
 
-  setPhase(data);
+  setPhase(data_phase);
 
   parseMessage(buffer, length);
 
@@ -199,6 +232,7 @@ int llwrite(int fd, char *buffer, int length)
 }
 
 int llclose(int fd) {
+  setPhase(close_phase);
   if(write_suFrame(fd, C_DISC) < 0)
     return -1;
   printf("Sent DISC\n");
@@ -210,6 +244,9 @@ int llclose(int fd) {
   if(write_suFrame(fd, C_UA) < 0)
     return -1;
   printf("Sent C_UA\n");
+
+  if(closeSerialPort(fd) < 0)
+    return -1;
 
   return 0;
 }

@@ -1,9 +1,9 @@
 #pragma once
 
 typedef enum { 
-    open,
-    data,
-    close
+    open_phase,
+    data_phase,
+    close_phase
 } phase_t;
 
 /**

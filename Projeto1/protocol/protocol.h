@@ -25,7 +25,7 @@ int llopen(int port, int mode);
  *
  *  @return Number of characters read (buffer length) on success, -1 otherwise.
  */
-int llread(int fd, char *buffer);
+int llread(int fd, unsigned char *buffer);
 
 /**
  *  Writes a data frame to the serial port.
@@ -36,10 +36,11 @@ int llread(int fd, char *buffer);
  *
  *  @return Number of written characters on success, -1 otherwise.
  */
-int llwrite(int fd, char *buffer, int length);
+int llwrite(int fd, unsigned char *buffer, int length);
 
 /**
  *  Closes the connection on the serial port.
+ *  Resets the serial port configuration and closes its file descriptor
  *
  *  @param fd File descriptor of the serial port
  *

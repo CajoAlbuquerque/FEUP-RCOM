@@ -1,6 +1,10 @@
 #include "transmitter.h"
 #include "../macros.h"
 #include "../state_machine/statemachine.h"
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <string.h>
 
 static unsigned char *msg;
@@ -17,14 +21,12 @@ int write_suFrame(int fd, unsigned char control)
   set[F2_INDEX] = FLAG;
 
   if (write(fd, set, SU_FRAME_SIZE) <= 0)
-  {
     return -1;
-  }
 
   return 0;
 }
 
-int parseMessage(char *buffer, int length)
+int parseMessage(unsigned char *buffer, int length)
 {
   unsigned char bcc2 = 0;
   unsigned char control;
@@ -113,24 +115,16 @@ int read_responseFrame(int fd)
 
 int parseControl(unsigned char control)
 {
-  if (control == REJ_0)
+  if (control == RR_0 || control == RR_1)
   {
-    return FALSE;
-  }
-  else if (control == REJ_1)
-  {
-    return FALSE;
-  }
-  else if (control == RR_0)
-  {
+    if(control == RR_0)
+      NS = 0;
+    else
+      NS = 1;
+
     free(msg);
-    NS = 0;
     return TRUE;
   }
-  else if (control == RR_1)
-  {
-    free(msg);
-    NS = 1;
-    return TRUE;
-  }
+
+  return FALSE;
 }

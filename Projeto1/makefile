@@ -1,11 +1,10 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic #-Werror
 
-EXEC = receiver
+EXEC = app
 
-all: statemachine.o receiver.o transmitter.o alarm.o application.o protocol.o macro.o
-	$(CC) $(CFLAGS) receiver.o statemachine.o alarm.o application.o protocol.o macro.o -o $(EXEC)
-	$(CC) $(CFLAGS) transmitter.o statemachine.o alarm.o application.o protocol.o macro.o -o transmit
+all: statemachine.o receiver.o transmitter.o alarm.o application.o protocol.o macros.h
+	$(CC) $(CFLAGS) statemachine.o receiver.o transmitter.o alarm.o application.o protocol.o -o $(EXEC)
 
 transmitter.o: transmitter/transmitter.c transmitter/transmitter.h
 	$(CC) $(CFLAGS) -c transmitter/transmitter.c
@@ -25,10 +24,6 @@ application.o: application/application.c application/application.h
 protocol.o: protocol/protocol.c protocol/protocol.h
 	$(CC) $(CFLAGS) -c protocol/protocol.c
 
-macro.o: macro.c
-	$(CC) $(CFLAGS) -c macro.c
-
 clean:
 	rm -f $(EXEC)
 	rm -f *.o
-	rm -f transmit

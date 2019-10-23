@@ -2,14 +2,27 @@
 #include "../macros.h"
 #include "../state_machine/statemachine.h"
 
+#include <stdio.h>
+#include <unistd.h>
+
 static unsigned int NR = 0;
 
-void initFlags(flags_t flags)
+void initFlags(flags_t *flags)
 {
-  flags.data_ok = FALSE;
-  flags.repeated_data = FALSE;
-  flags.escape_byte = FALSE;
-  flags.send_disc = FALSE;
+  flags->data_ok = FALSE;
+  flags->repeated_data = FALSE;
+  flags->escape_byte = FALSE;
+  flags->send_disc = FALSE;
+}
+
+void setNR(unsigned int new_nr)
+{
+  NR = new_nr;
+}
+
+unsigned int getNR()
+{
+  return NR;
 }
 
 int read_suFrame(int fd, unsigned char control)
@@ -56,13 +69,11 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
       if (byte == CONTROL_0 && NR == 1)
       {
         printf("Received Repeated Data 0\n");
-        write_SUframe(fd, RR_1);
         flags->repeated_data = TRUE;
       }
       else if (byte == CONTROL_1 && NR == 0)
       {
         printf("Received Repeated Data 1\n");
-        write_SUframe(fd, RR_0);
         flags->repeated_data = TRUE;
       }
       else if (byte == C_DISC)
@@ -106,28 +117,4 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
   }
 
   return current_index;
-}
-
-void writeResponse(int fd, unsigned int data_ok)
-{
-  if (data_ok)
-  {
-    if (NR == 1)
-    {
-      NR = 0;
-      write_SUframe(fd, RR_0);
-    }
-    else
-    {
-      NR = 1;
-      write_SUframe(fd, RR_1);
-    }
-  }
-  else
-  {
-    if (NR == 1)
-      write_SUframe(fd, REJ_1);
-    else
-      write_SUframe(fd, REJ_0);
-  }
 }
