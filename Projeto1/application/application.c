@@ -53,9 +53,8 @@ int receiveFile(){
     int L1, L2, counter;
     //int fileSize;
     int receiveSize = 0, sequenceNumber = 0, readSize;
-    unsigned char *fileData, *dataReceive;
+    unsigned char fileData[155], dataReceive[155];
 
-    dataReceive= (unsigned char *)malloc(155 * sizeof(unsigned char));
     readSize = llread(application.fileDescriptor, fileData);
     receiveSize = fileData[0];
     if(receiveSize < 0){
@@ -81,7 +80,7 @@ int receiveFile(){
     return 0;
 }
 
-unsigned char * controlPacket(unsigned int control, int fileSize, unsigned char filename){
+unsigned char controlPacket(unsigned int control, int fileSize, unsigned char filename){
     if(control != 2 && control != 3){
         printf("control can't be different than 2 and 3");
         exit(-1);
@@ -127,15 +126,15 @@ int main(int argc, char **argv){
         exit(1);
     }
 
-    application.status = argv[2];
-    if((strcmp("TRANSMITTER",application.status) != 0) && strcmp("RECEIVER", application.status) !=0) {
+    if((strcmp("TRANSMITTER",argv[2]) != 0) && strcmp("RECEIVER", argv[2]) !=0) {
         printf("Usage: %s <serial port number> <TRANSMITTER || RECEIVER> <file name>\n", argv[0]);
         exit(1);
     }
 
+    application.status = atoi(argv[2]);
     application.fileDescriptor = llopen(atoi(argv[1]), application.status);
 
-    if(strcmp("TRANSMITTER", application.status) == 0){
+    if(strcmp("TRANSMITTER", argv[2]) == 0){
         sendFile(argv[3]);
         llclose(application.fileDescriptor);
     } else {

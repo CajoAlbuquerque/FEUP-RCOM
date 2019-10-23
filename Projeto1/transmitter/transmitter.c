@@ -32,7 +32,7 @@ int parseMessage(unsigned char *buffer, int length)
   unsigned char control;
   unsigned int j = 0;
 
-  msg = (unsigned char *)calloc(SU_FRAME_SIZE + 2 * (length) + 1, sizeof(unsigned char));
+  msg = (unsigned char *)malloc((SU_FRAME_SIZE + 2 * (length) + 1) * sizeof(unsigned char));
   if(msg == NULL){
     return -1;
   }
