@@ -44,7 +44,7 @@ int receiveFile();
  *
  *  @return data package
  */
-int controlPacket(unsigned int control, int fileSize, unsigned char filename);
+unsigned char* controlPacket(unsigned int control, int fileSize, unsigned char filename);
 
 /**
  *  sends a file

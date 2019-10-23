@@ -20,7 +20,7 @@ unsigned char* getCharBuffer(unsigned char *filename, int *fileSize){
     stat((char*) filename, &fData);
     (*fileSize) = fData.st_size;
 
-    printf("Get %ld bytes form file %d\n", *fileSize, *filename );
+    printf("Get %d bytes form file %d\n", *fileSize, *filename );
 
     fileData = (unsigned char *)malloc(*fileSize);
 
@@ -41,7 +41,7 @@ unsigned char* dataPacket(int sendSize, int sequenceNumber, unsigned char* filen
     fileData[2] = L2;
     fileData[3] = L1;
     while(count <= sendSize){
-        fileData[4+count] = filename + count;
+        fileData[4+count] = *(filename + count);
         count++;
     }
 
@@ -50,12 +50,21 @@ unsigned char* dataPacket(int sendSize, int sequenceNumber, unsigned char* filen
 
 int receiveFile(){
     int L1, L2, counter;
-    int fileSize, receiveSize = 0, sequenceNumber = 0, readSize;
+    //int fileSize;
+    int receiveSize = 0, sequenceNumber = 0, readSize;
     unsigned char *fileData, *dataReceive;
 
     readSize = llread(application.fileDescriptor, fileData);
     receiveSize = fileData[0];
+    if(receiveSize < 0){
+        printf("Wrong receive size\n");
+        exit(-1);
+    }
     sequenceNumber = fileData[1];
+    if( sequenceNumber < 0){
+        printf("Wrong sequece number\n");
+        exit(-1);
+    }
     L2 = fileData[2];
     L1 = fileData[3];
     if(readSize != 256 *L2 + L1 ){
@@ -66,33 +75,32 @@ int receiveFile(){
         dataReceive[counter] = fileData[4 + counter];
         counter++;
     }
-    
+    return 0;
 }
 
-int controlPacket(unsigned int control, int fileSize, unsigned char filename){
+unsigned char * controlPacket(unsigned int control, int fileSize, unsigned char filename){
     if(control != 2 && control != 3){
         printf("control can't be different than 2 and 3");
         exit(-1);
     }
-    int count = 0;
-    unsigned char set[7];
 
+    unsigned char* set = (unsigned char *)malloc(7);
     set[0] = control;
     set[1] = fileSize;
     set[2] = filename;
 
  //TODO
 
-    return 0;
+    return set;
 }
 
 int sendFile(unsigned char *filename){
     int fileSize, sendSize = 0, sequenceNumber = 0;
     unsigned char *fileData, *dataSend;
-    fileData = getCharBuffer((unsigned char*) filename, &fileSize);
-    controlPacket(0x02, fileSize, filename);
+    fileData = getCharBuffer( filename, &fileSize);
+    controlPacket(2, fileSize, filename);
     while((fileSize - sendSize) > 150){ //if possible sends 150 bits of data
-        *dataSend = dataPacket(150, sequenceNumber, filename);
+        dataSend = dataPacket(150, sequenceNumber, filename);
         llwrite(application.fileDescriptor, dataSend, &fileSize);
         free(dataSend);
     } 
@@ -102,13 +110,14 @@ int sendFile(unsigned char *filename){
         free(dataSend);
     } 
     
-    controlPacket(0x03, fileSize, filename);
+    controlPacket(3, fileSize, filename);
+    return 0;
 }
 
 
 int main(int argc, char **argv){
     
-    application.status = argv[2];
+    application.status = *argv[2];
 
     if ((argc < 2) || ((strcmp("/dev/ttyS0", argv[1]) != 0) &&
                      (strcmp("/dev/ttyS1", argv[1]) != 0))) {
@@ -126,7 +135,7 @@ int main(int argc, char **argv){
         exit(1);
     }
 
-    application.fileDescriptor = llopen(argv[1], application.status);
+    application.fileDescriptor = llopen(*argv[1], application.status);
 
     if(strcmp("TRANSMITTER", application.status) == 0){
         sendFile(argv[3]);
