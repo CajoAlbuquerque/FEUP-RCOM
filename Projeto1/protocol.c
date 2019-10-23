@@ -144,6 +144,29 @@ int llopen(int port, int mode)
   return fd;
 }
 
+int llread(int fd, char *buffer)
+{
+  unsigned int result;
+  flags_t flags;
+  initFlags(flags);
+
+  result = read_dataFrame(fd, buffer, &flags);
+
+  //When there is repeated data, buffer will have no content
+  if (flags.repeated_data)
+    return 0;
+
+  if (flags.send_disc)
+  {
+    //processDisc(fd); TODO: processdisc
+    return -1;
+  }
+
+  writeResponse(fd, flags.data_ok);
+
+  return result;
+}
+
 int llwrite(int fd, char *buffer, int length)
 {
   unsigned char bcc2 = 0;
@@ -166,29 +189,6 @@ int llwrite(int fd, char *buffer, int length)
     control = read_responseFrame(fd);
 
   } while (!parseControl(control));
-
-  return result;
-}
-
-int llread(int fd, char *buffer)
-{
-  unsigned int result;
-  flags_t flags;
-  initFlags(flags);
-
-  result = read_dataFrame(fd, buffer, &flags);
-
-  //When there is repeated data, buffer will have no content
-  if (flags.repeated_data)
-    return 0;
-
-  if (flags.send_disc)
-  {
-    //processDisc(fd); TODO: processdisc
-    return -1;
-  }
-
-  writeResponse(fd, flags.data_ok);
 
   return result;
 }
