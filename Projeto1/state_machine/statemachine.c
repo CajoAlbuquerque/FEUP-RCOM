@@ -1,9 +1,10 @@
 #include "statemachine.h"
 #include "../macros.h"
 
-int suFrameSM(unsigned char byte, unsigned char control, int state) {
-  static int state = START;
-  switch (state) {
+int suFrameSM(unsigned char byte, unsigned char control, int state)
+{
+  switch (state)
+  {
   case START:
     if (byte == FLAG)
       state = FLAG_RCV;
@@ -43,9 +44,11 @@ int suFrameSM(unsigned char byte, unsigned char control, int state) {
   return state;
 }
 
-int readSM(unsigned char byte, int state) {
+int readSM(unsigned char byte, int state)
+{
   static unsigned char control;
-  switch (state) {
+  switch (state)
+  {
   case START:
     if (byte == FLAG)
       state = FLAG_RCV;
@@ -61,7 +64,8 @@ int readSM(unsigned char byte, int state) {
   case A_RCV:
     if (byte == FLAG)
       state = FLAG_RCV;
-    else if (byte == CONTROL_0 || byte == CONTROL_1 || byte == C_DISC){
+    else if (byte == CONTROL_0 || byte == CONTROL_1 || byte == C_DISC)
+    {
       control = byte;
       state = C_RCV;
     }
@@ -93,11 +97,11 @@ int readSM(unsigned char byte, int state) {
   return state;
 }
 
-
-int writeSM(char byte, int state) {
-static int state = START;
-static unsigned char control;
-  switch (state) {
+int writeSM(unsigned char byte, int state)
+{
+  static unsigned char control;
+  switch (state)
+  {
   case START:
     if (byte == FLAG)
       state = FLAG_RCV;
@@ -113,10 +117,11 @@ static unsigned char control;
   case A_RCV:
     if (byte == FLAG)
       state = FLAG_RCV;
-    else if (byte ==  RR_0 || byte == RR_1 || byte == REJ_0 || byte == REJ_1)  {
-		control = byte;		
-		state= C_RCV;
-	}
+    else if (byte == RR_0 || byte == RR_1 || byte == REJ_0 || byte == REJ_1)
+    {
+      control = byte;
+      state = C_RCV;
+    }
     else
       state = START;
     break;

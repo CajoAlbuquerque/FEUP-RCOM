@@ -170,99 +170,25 @@ int llwrite(int fd, char *buffer, int length)
   return result;
 }
 
-int llread(int fd, unsigned char *buffer)
+int llread(int fd, char *buffer)
 {
-  unsigned char current_bcc2 = 0;
-  unsigned char byte;
-  unsigned int current_index = 0;
-
-  int state = START;
-
+  unsigned int result;
   flags_t flags;
   initFlags(flags);
 
-  while (state != END)
-  {
-    if (read(fd, byte, 1) < 0)
-    {
-      perror("llread");
-      exit(-1);
-    }
-    state = readSM(&byte, state);
+  result = read_dataFrame(fd, buffer, &flags);
 
-    if (state == C_RCV)
-    { //Checking for repeated data
-      if (byte == CONTROL_0 && NR == 1)
-      {
-        printf("REPEATED DATA 0\n");
-        write_SUframe(fd, RR_1);
-        flags.repeated_data = TRUE;
-      }
-      else if (byte == CONTROL_1 && NR == 0)
-      {
-        printf("REPEATED DATA 1\n");
-        write_SUframe(fd, RR_0);
-        flags.repeated_data = TRUE;
-      }
-      else if (byte == C_DISC)
-      {
-        printf("Send Disc True\n");
-        flags.send_disc = TRUE;
-      }
-      /*
-      When repeated data is sent by the transmitter,
-      the receiver ignores all data in the frame.
-    */
-    }
-    else if (state == DATA_LOOP && !flags.repeated_data)
-    { //Data is being received
-      if (current_bcc2 == byte)
-      { // If current byte is bcc2 would data be ok?
-        flags.data_ok = TRUE;
-      }
-      else
-      {
-        flags.data_ok = FALSE;
-      }
-
-      if (byte == ESC)
-      { //byte used for stuffing
-        flags.escape_byte = TRUE;
-        continue;
-      }
-      else if (flags.escape_byte == TRUE)
-      { //destuffing the byte
-        if (byte == 0x5e)
-          buffer[current_index] = 0x7e; //original byte was 0x7e
-        //byte = 0x5d
-        else
-        {
-          buffer[current_index] = 0x7d; //original byte was 0x7d
-        }
-        flags.escape_byte = FALSE;
-        current_index++;
-      }
-      else
-      {
-        buffer[current_index] = byte;
-        current_index++;
-      }
-
-      current_bcc2 = current_bcc2 ^ buffer[current_index - 1];
-    }
-  }
-
-  //When there is repeated data buffer will have no content
+  //When there is repeated data, buffer will have no content
   if (flags.repeated_data)
     return 0;
 
   if (flags.send_disc)
   {
-    processDisc(fd);
+    //processDisc(fd); TODO: processdisc
     return -1;
   }
 
-  writeResponse(fd);
+  writeResponse(fd, flags.data_ok);
 
-  return current_index;
+  return result;
 }
