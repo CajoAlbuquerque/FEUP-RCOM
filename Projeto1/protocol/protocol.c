@@ -1,9 +1,9 @@
 #include "protocol.h"
-#include "alarm/alarm.h"
-#include "macros.h"
-#include "receiver/receiver.h"
-#include "state_machine/statemachine.h"
-#include "transmitter/transmitter.h"
+#include "../alarm/alarm.h"
+#include "../macros.h"
+#include "../receiver/receiver.h"
+#include "../state_machine/statemachine.h"
+#include "../transmitter/transmitter.h"
 
 #include <fcntl.h>
 #include <signal.h>
@@ -21,12 +21,14 @@ static struct termios oldtio;
  *  @param port Serial port number
  *  @return Serial port file descriptor
  */
-int initSerialPort(int port) {
+int initSerialPort(int port)
+{
   struct termios newtio;
   char serialPort[11];
   int fd;
 
-  switch (port) {
+  switch (port)
+  {
   case 0:
     strcpy(serialPort, "/dev/ttyS0");
     break;
@@ -46,12 +48,14 @@ int initSerialPort(int port) {
   }
 
   fd = open(serialPort, O_RDWR | O_NOCTTY);
-  if (fd < 0) {
+  if (fd < 0)
+  {
     perror(serialPort);
     return -1;
   }
 
-  if (tcgetattr(fd, &oldtio) == -1) { /* save current port settings */
+  if (tcgetattr(fd, &oldtio) == -1)
+  { /* save current port settings */
     perror("tcgetattr");
     return -1;
   }
@@ -67,7 +71,8 @@ int initSerialPort(int port) {
 
   tcflush(fd, TCIOFLUSH);
 
-  if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
+  if (tcsetattr(fd, TCSANOW, &newtio) == -1)
+  {
     perror("tcsetattr");
     return -1;
   }
@@ -84,8 +89,10 @@ int initSerialPort(int port) {
  *  @param port Serial port number
  *  @return Serial port file descriptor
  */
-int closeSerialPort(int fd) {
-  if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
+int closeSerialPort(int fd)
+{
+  if (tcsetattr(fd, TCSANOW, &oldtio) == -1)
+  {
     perror("tcsetattr");
     return -1;
   }
@@ -93,32 +100,38 @@ int closeSerialPort(int fd) {
   close(fd);
 }
 
-int llopen(int port, int mode) {
+int llopen(int port, int mode)
+{
   int fd = initSerialPort(port);
 
   if (initializeHandler(fd) == -1)
     return -1;
 
-  switch (mode) {
+  switch (mode)
+  {
   case TRANSMITTER:
-    if (write_suFrame(fd, C_SET) == -1) {
+    if (write_suFrame(fd, C_SET) == -1)
+    {
       return -1;
     }
     printf("Sent SET\n");
 
-    if (read_suFrame(fd, C_UA) == -1) {
+    if (read_suFrame(fd, C_UA) == -1)
+    {
       return -1;
     }
     printf("Received UA\n");
     break;
 
   case RECEIVER:
-    if (read_suFrame(fd, C_SET) == -1) {
+    if (read_suFrame(fd, C_SET) == -1)
+    {
       return -1;
     }
     printf("Received SET\n");
 
-    if (write_suFrame(fd, C_UA) == -1) {
+    if (write_suFrame(fd, C_UA) == -1)
+    {
       return -1;
     }
     printf("Sent UA\n");
@@ -131,130 +144,51 @@ int llopen(int port, int mode) {
   return fd;
 }
 
-int llwrite(int fd, char *buffer, int length) {
+int llread(int fd, char *buffer)
+{
+  unsigned int result;
+  flags_t flags;
+  initFlags(flags);
+
+  result = read_dataFrame(fd, buffer, &flags);
+
+  //When there is repeated data, buffer will have no content
+  if (flags.repeated_data)
+    return 0;
+
+  if (flags.send_disc)
+  {
+    //processDisc(fd); TODO: processdisc
+    return -1;
+  }
+
+  writeResponse(fd, flags.data_ok);
+
+  return result;
+}
+
+int llwrite(int fd, char *buffer, int length)
+{
   unsigned char bcc2 = 0;
+  unsigned char control;
   int j = 0, result;
 
   setPhase(data);
 
   parseMessage(buffer, length);
 
-  do{
-  	control = send_message(fd);
-  }while(!parseControl(control));
-
-  return 0;
-}
-
-int llread(int fd, unsigned char *buffer)
-{
-  unsigned char current_bcc2 = 0;
-  unsigned char byte;
-  unsigned int current_index = 0;
-
-  int state = START;
-
-  flags_t flags;
-  initFlags(flags);
-
-  while (state != END)
+  do
   {
-    if (read(fd, byte, 1) < 0)
+    result = sendMessage(fd);
+
+    if (result < 0)
     {
-      perror("llread");
-      exit(-1);
+      perror("sendMessage");
+      break;
     }
-    state = readSM(&byte, state);
+    control = read_responseFrame(fd);
 
-    if (state == C_RCV)
-    { //Checking for repeated data
-      if (byte == CONTROL_0 && NR == 1)
-      {
-        printf("REPEATED DATA 0\n");
-        write_SUframe(fd, RR_1);
-        flags.repeated_data = TRUE;
-      }
-      else if (byte == CONTROL_1 && NR == 0)
-      {
-        printf("REPEATED DATA 1\n");
-        write_SUframe(fd, RR_0);
-        flags.repeated_data = TRUE;
-      }
-      else if (byte == C_DISC)
-      {
-        printf("Send Disc True\n");
-        flags.send_disc = TRUE;
-      }
-      /*
-      When repeated data is sent by the transmitter,
-      the receiver ignores all data in the frame.
-    */
-    }
-    else if (state == DATA_LOOP && !flags.repeated_data)
-    { //Data is being received
-      if (current_bcc2 == byte)
-      { // If current byte is bcc2 would data be ok?
-        flags.data_ok = TRUE;
-      }
-      else
-      {
-        flags.data_ok = FALSE;
-      }
+  } while (!parseControl(control));
 
-      if (byte == ESC)
-      { //byte used for stuffing
-        flags.escape_byte = TRUE;
-        continue;
-      }
-      else if (flags.escape_byte == TRUE)
-      { //destuffing the byte
-        if (byte == 0x5e)
-          buffer[current_index] = 0x7e; //original byte was 0x7e
-        //byte = 0x5d
-        else
-        {
-          buffer[current_index] = 0x7d; //original byte was 0x7d
-        }
-        flags.escape_byte = FALSE;
-        current_index++;
-      }
-      else
-      {
-        buffer[current_index] = byte;
-        current_index++;
-      }
-
-      current_bcc2 = current_bcc2 ^ buffer[current_index - 1];
-    }
-  }
-
-  //When there is repeated data buffer will have no content
-  if (flags.repeated_data)
-    return 0;
-
-  if (flags.send_disc)
-  {
-    processDisc(fd);
-    return -1;
-  }
-
-  if (flags.data_ok)
-  {
-    if (NR)
-    {
-      NR = 0;
-      write_SUframe(fd, RR_0);
-    }
-    else
-    {
-      NR = 1;
-      write_SUframe(fd, RR_1);
-    }
-  }
-  else
-  {
-    NR ? write_SUframe(fd, REJ_1) : write_SUframe(fd, REJ_0);
-  }
-
-  return current_index;
+  return result;
 }
