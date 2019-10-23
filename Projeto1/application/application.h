@@ -52,5 +52,5 @@ unsigned char* controlPacket(unsigned int control, int fileSize, unsigned char f
  * @param filename name of the file to transmit
  *  @return 
  */
-int sendFile(unsigned char *filename);
+int sendFile(char *filename);
 

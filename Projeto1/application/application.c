@@ -27,26 +27,26 @@ unsigned char* getCharBuffer(unsigned char *filename, int *fileSize){
 
     fread(fileData, sizeof(unsigned char), *fileSize, f);
     return fileData;
-
 }
-unsigned char* dataPacket(int sendSize, int sequenceNumber, unsigned char* filename){
+
+unsigned char* dataPacket(int sendSize, int sequenceNumber, unsigned char* data){
     int count = 0;
-    unsigned char *fileData = (unsigned char *)malloc(sendSize);
+    unsigned char *packet = (unsigned char *)malloc(sendSize);
 
-    fileData[0] = sendSize;
-    fileData[1] = sequenceNumber;
+    packet[0] = 1;
+    packet[1] = sequenceNumber;
 
-    int L2 =  1;
-    int L1 = sendSize - 256 * L2;
+    int L2 = sendSize/256;
+    int L1 = sendSize - L2;
 
-    fileData[2] = L2;
-    fileData[3] = L1;
+    packet[2] = L2;
+    packet[3] = L1;
     while(count <= sendSize){
-        fileData[4+count] = *(filename + count);
+        packet[4+count] = data[count + sequenceNumber *150];
         count++;
     }
 
-    return fileData;
+    return packet;
 }
 
 int receiveFile(){
@@ -78,7 +78,6 @@ int receiveFile(){
         counter++;
     }
     
-    free(dataReceive);
     return 0;
 }
 
@@ -88,8 +87,7 @@ unsigned char * controlPacket(unsigned int control, int fileSize, unsigned char 
         exit(-1);
     }
 
-    unsigned char* set;
-    set = (unsigned char *)malloc(7);
+    unsigned char set[7];
     set[0] = control;
     set[1] = fileSize;
     set[2] = filename;
@@ -99,19 +97,22 @@ unsigned char * controlPacket(unsigned int control, int fileSize, unsigned char 
     return set;
 }
 
-int sendFile(unsigned char *filename){
+int sendFile(char *filename){
     int fileSize, sendSize = 0, sequenceNumber = 0;
     unsigned char *fileData, *dataSend;
+
     fileData = getCharBuffer( filename, &fileSize);
     controlPacket(2, fileSize, *filename);
-    while((fileSize - sendSize) > 150){ //if possible sends 150 bits of data
-        dataSend = dataPacket(150, sequenceNumber, filename);
-        llwrite(application.fileDescriptor, dataSend, fileSize);
+
+    while((fileSize - sendSize) >= 150){ //if possible sends 150 bytes of data
+        dataSend = dataPacket(150, sequenceNumber, fileData);
+        llwrite(application.fileDescriptor, dataSend, 150 + 4);
         free(dataSend);
+        sequenceNumber = sequenceNumber++ % 255;
     } 
     if((fileSize - sendSize) > 0){ 
-        dataSend = dataPacket((fileSize - sendSize), sequenceNumber, filename);
-        llwrite(application.fileDescriptor, dataSend, &fileSize);
+        dataSend = dataPacket((fileSize - sendSize), sequenceNumber, fileData);
+        llwrite(application.fileDescriptor, dataSend, (fileSize - sendSize));
         free(dataSend);
     } 
     
@@ -121,34 +122,26 @@ int sendFile(unsigned char *filename){
 
 
 int main(int argc, char **argv){
-    
-    application.status = *argv[2];
-
-    if ((argc < 2) || ((strcmp("/dev/ttyS0", argv[1]) != 0) &&
-                     (strcmp("/dev/ttyS1", argv[1]) != 0))) {
-        printf("Usage: SerialPort\n\tex: /dev/ttyS1\n");
+    if (argc < 3) {
+        printf("Usage: %s <serial port number> <TRANSMITTER || RECEIVER> <file name>\n", argv[0]);
         exit(1);
     }
 
-    if((strcmp("TRANSMITTER",application.status) !=0) && strcmp("RECEIVER", application.status) !=0) {
-        printf("Usage: SerialPort\n\tex: /dev/ttyS1\n TRANSMITTER || RECEIVER \n");
+    application.status = argv[2];
+    if((strcmp("TRANSMITTER",application.status) != 0) && strcmp("RECEIVER", application.status) !=0) {
+        printf("Usage: %s <serial port number> <TRANSMITTER || RECEIVER> <file name>\n", argv[0]);
         exit(1);
     }
 
-    if(strcmp("TRANSMITTER", application.status) == 0 && argc < 3){
-        printf("Usage: SerialPort\n\tex: /dev/ttyS1\n TRANSMITTER || RECEIVER \n filename\n");
-        exit(1);
-    }
-
-    application.fileDescriptor = llopen(*argv[1], application.status);
+    application.fileDescriptor = llopen(atoi(argv[1]), application.status);
 
     if(strcmp("TRANSMITTER", application.status) == 0){
-        sendFile((unsigned char*)argv[3]);
+        sendFile(argv[3]);
         llclose(application.fileDescriptor);
     } else {
         receiveFile();
     }
     
     printf("Sucessfull transmition\n");
-
+    return 0;
 }
