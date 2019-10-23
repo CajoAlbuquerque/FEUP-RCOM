@@ -1,3 +1,5 @@
+#pragma once
+
 typedef struct flags {
     unsigned int data_ok;
     unsigned int repeated_data;

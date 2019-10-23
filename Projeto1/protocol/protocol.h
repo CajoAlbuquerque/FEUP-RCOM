@@ -1,3 +1,4 @@
+#pragma once
 // Data connection protocol services
 #define COM0 "/dev/ttyS0"
 #define COM1 "/dev/ttyS1"

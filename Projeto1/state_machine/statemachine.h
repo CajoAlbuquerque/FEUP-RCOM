@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  *  State machine to process a supervision or unumbered frame.
  *  The frame's expected control character must be passed as an argument.

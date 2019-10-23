@@ -1,3 +1,4 @@
+#pragma once
 
 /**
  *  Writes a supervision or an unumbered frame to the serial port.
