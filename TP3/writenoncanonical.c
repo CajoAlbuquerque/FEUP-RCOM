@@ -4,7 +4,7 @@
 int fd;
 volatile int STOP = FALSE;
 volatile int READY = FALSE;
-enum fase fase = Set;
+phase_t phase = Set;
 int timeouts = 0;
 
 void send_message(){
@@ -16,9 +16,9 @@ void timeout() { //handler of alarm
   timeouts++;
   if (timeouts < 3) {
     printf("Resent\n");
-    if(fase == Set){
+    if(phase == Set){
       send_frameSU(C_SET); //resend set_transmission
-    } else if(fase == Transmit){
+    } else if(phase == Transmit){
       send_message();
     } else {
       send_frameSU(C_DISC);
@@ -246,11 +246,11 @@ int main(int argc, char **argv) {
   printf("Receive UA\n");
 
   timeouts = 0; //resent because is possible that were timeouts in set_transmission
-  fase = Transmit;
+  phase = Transmit;
   send_message();
   receive_confimation();
 
-  fase = End;
+  phase = End;
   timeouts = 0;
   send_frameSU(C_DISC); //Send Disconect
   printf("Send C_DISC\n");
