@@ -55,13 +55,13 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
     { //Checking for repeated data
       if (byte == CONTROL_0 && NR == 1)
       {
-        printf("REPEATED DATA 0\n");
+        printf("Received Repeated Data 0\n");
         write_SUframe(fd, RR_1);
         flags->repeated_data = TRUE;
       }
       else if (byte == CONTROL_1 && NR == 0)
       {
-        printf("REPEATED DATA 1\n");
+        printf("Received Repeated Data 1\n");
         write_SUframe(fd, RR_0);
         flags->repeated_data = TRUE;
       }
