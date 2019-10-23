@@ -158,7 +158,12 @@ int llread(int fd, char *buffer)
 
   if (flags.send_disc)
   {
-    //processDisc(fd); TODO: processdisc
+    write_suFrame(fd, C_DISC);
+    printf("Sent DISC\n");
+
+    read_suFrame(fd, C_UA);
+    printf("Received UA\n");
+
     return -1;
   }
 
@@ -180,15 +185,31 @@ int llwrite(int fd, char *buffer, int length)
   do
   {
     result = sendMessage(fd);
+    printf("Sent Data\n");
 
     if (result < 0)
-    {
-      perror("sendMessage");
-      break;
-    }
+      return -1;
+    
     control = read_responseFrame(fd);
+    printf("Received %x\n", control);
 
   } while (!parseControl(control));
 
   return result;
+}
+
+int llclose(int fd) {
+  if(write_suFrame(fd, C_DISC) < 0)
+    return -1;
+  printf("Sent DISC\n");
+
+  if(read_suFrame(fd, C_DISC) < 0)
+    return -1;
+  printf("Received DISC\n");
+
+  if(write_suFrame(fd, C_UA) < 0)
+    return -1;
+  printf("Sent C_UA\n");
+
+  return 0;
 }
