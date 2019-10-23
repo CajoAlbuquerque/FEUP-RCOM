@@ -1,3 +1,4 @@
+#pragma once
 
 /**
  *  Writes a supervision or an unumbered frame to the serial port.
@@ -16,7 +17,7 @@ int write_suFrame(int fd, unsigned char control);
  *  @param length Length of the array
  *  @return 0 in case of success; -1 on error
  */
-int parseMessage(char *buffer, int length);
+int parseMessage(unsigned char *buffer, int length);
 
 /**
  *  Sends the message through the serial port.
