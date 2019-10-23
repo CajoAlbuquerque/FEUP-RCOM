@@ -25,10 +25,28 @@ unsigned char* getCharBuffer(unsigned char *filename, int *fileSize){
 
 }
 
+int dataPacket(int sendSize){
+  /*  unsigned char set[SU_FRAME_SIZE];
+
+    set[F1_INDEX] = FLAG;
+    set[A_INDEX] = A;
+    set[C_INDEX] = control;
+    set[BCC_INDEX] = A ^ control;
+    set[F2_INDEX] = FLAG;*/
+
+    if (write(fd, set, SU_FRAME_SIZE) <= 0) {
+        return -1;
+    }
+    return 0;
+}
+
 int sendFile(unsigned char *filename){
-    int fileSize;
+    int fileSize, sendSize = 0;
     unsigned char *fileData;
     fileData = getCharBuffer((unsigned char*) filename, &fileSize);
+    if((fileSize - sendSize) > 200){ //max is 258
+        dataPacket(200);
+    } 
     llwrite(application.fileDescriptor, fileData, &fileSize);
 }
 
