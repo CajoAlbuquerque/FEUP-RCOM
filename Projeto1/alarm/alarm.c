@@ -3,6 +3,8 @@
 #include "../transmitter/transmitter.h"
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 // This variables are static so no one can access them from other files.
 static int serial_fd; /**< Serial port file descriptor. Used for frame retransmissions. */

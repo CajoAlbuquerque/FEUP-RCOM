@@ -174,6 +174,7 @@ int llread(int fd, unsigned char *buffer)
       return -1;
     printf("Sent DISC\n");
 
+    setPhase(close_phase);
     if(read_suFrame(fd, C_UA) < 0)
       return -1;
     printf("Received UA\n");
