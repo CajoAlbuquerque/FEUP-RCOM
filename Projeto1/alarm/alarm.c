@@ -1,4 +1,4 @@
-#include "alarm.h"
+#include "alarm/alarm.h"
 #include "../macros.h"
 #include "transmitter/transmitter.h"
 #include <signal.h>
