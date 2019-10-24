@@ -13,6 +13,8 @@
 #include <termios.h>
 #include <unistd.h>
 
+#define DEBUG 1
+
 static struct termios oldtio;
 
 /**
@@ -31,10 +33,16 @@ int initSerialPort(int port)
   switch (port)
   {
   case 0:
-    strcpy(serialPort, "/dev/ttyS0");
+    if(DEBUG)
+      strcpy(serialPort, "/dev/pts/3");
+    else
+      strcpy(serialPort, "/dev/ttyS0");
     break;
   case 1:
-    strcpy(serialPort, "/dev/ttyS1");
+    if(DEBUG)
+      strcpy(serialPort, "/dev/pts/4");
+    else
+      strcpy(serialPort, "/dev/ttyS1");
     break;
   case 2:
     strcpy(serialPort, "/dev/ttyS2");
@@ -115,6 +123,7 @@ int llopen(int port, int mode)
   switch (mode)
   {
   case TRANSMITTER:
+    printf("TRANSMITTER\n");
     if (write_suFrame(fd, C_SET) == -1)
     {
       return -1;
@@ -129,6 +138,8 @@ int llopen(int port, int mode)
     break;
 
   case RECEIVER:
+        printf("RECEIVER\n");
+
     if (read_suFrame(fd, C_SET) == -1)
     {
       return -1;
@@ -157,6 +168,7 @@ int llread(int fd, unsigned char *buffer)
   initFlags(&flags);
 
   result = read_dataFrame(fd, buffer, &flags);
+  printf("Received DATA\n");
 
   //When there is repeated data, buffer will have no content
   if (flags.repeated_data){
@@ -190,19 +202,25 @@ int llread(int fd, unsigned char *buffer)
     {
       setNR(0);
       write_suFrame(fd, RR_0);
+      printf("Sent RR_0\n");
     }
     else
     {
       setNR(0);
       write_suFrame(fd, RR_1);
+      printf("Sent RR_1\n");
     }
   }
   else
   {
-    if (NR == 1)
+    if (NR == 1){
       write_suFrame(fd, REJ_1);
-    else
+      printf("Sent REJ_1\n");
+    }
+    else{
       write_suFrame(fd, REJ_0);
+      printf("Sent REJ_0\n");
+    }
   }
 
   return result;

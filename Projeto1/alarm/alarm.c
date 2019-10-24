@@ -35,6 +35,7 @@ void timeoutHandler(int signo) {
     } else if (phase == data_phase) {
       printf("Alarm on data phase\n");
       sendMessage(serial_fd); //TODO: FIX
+      printf("Resent Data\n");
     } else if (phase == close_phase) {
       write_suFrame(serial_fd, C_DISC);
     }
