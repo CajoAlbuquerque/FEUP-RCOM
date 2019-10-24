@@ -20,7 +20,7 @@ int write_suFrame(int fd, unsigned char control)
   set[BCC_INDEX] = A ^ control;
   set[F2_INDEX] = FLAG;
 
-  if (write(fd, set, SU_FRAME_SIZE) <= 0)
+  if (write(fd, set, SU_FRAME_SIZE) < 0)
     return -1;
 
   return 0;

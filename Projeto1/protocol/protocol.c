@@ -111,6 +111,7 @@ int llopen(int port, int mode)
 
   setPhase(open_phase);
 
+  printf("Enter switch\n");
   switch (mode)
   {
   case TRANSMITTER:
