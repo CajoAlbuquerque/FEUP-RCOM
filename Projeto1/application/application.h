@@ -1,26 +1,26 @@
 struct applicationLayer
 {
-    int fileDescriptor; /* Descritor correspondente à porta série */
+    int fileDescriptor; /* Serial port descriptor */
     int status; /* TRANSMITTER | RECEIVER */     
 } applicationLayer;
 
 struct applicationLayer application;
 
 /**
- *  gets the chars of the file given to transmit
+ *  gets all the chars of the file given to transmit and sends the pointer to them
  *
  *  @param filename name of the file to transmit
  *  @param fileSize size of the file to transmit
  *
- *  @return Cchars with the content of the file
+ *  @return all the chars in the file
  */
 unsigned char* getCharBuffer(char filename, int *fileSize);
 
 /**
- * creats the data package to send to llwrite
+ * creates the data package to send to llwrite
  *
  * @param sendSize size of the part of the file we are going to send
- * @param sequeceNumber number of files a ready send
+ * @param sequenceNumber number of files a ready send
  * @param filename name of the file to transmit
  *
  *  @return data package
@@ -36,13 +36,13 @@ unsigned char* dataPacket(int sendSize, int sequenceNumber, unsigned char* filen
 int receiveFile();
 
 /**
- * creats the control package
+ * creates the control package
  *
  * @param control 2 if start and 3 if end
  * @param size of the all file
  * @param filename name of the file to transmit
  *
- *  @return sucess
+ *  @return success
  */
 int controlPacket(unsigned int control, int fileSize, unsigned char filename);
 
@@ -54,5 +54,13 @@ int controlPacket(unsigned int control, int fileSize, unsigned char filename);
  */
 int sendFile(char filename);
 
-int receivePacket(unsigned int controlE, unsigned char *filename);
+/**
+ * receives the control package
+ *
+ * @param expected control, 2 if start and 3 if end
+ * @param filename name of the file receiving
+ *
+ *  @return success
+ */
+int receiveControlPacket2(unsigned char *filename);
 
