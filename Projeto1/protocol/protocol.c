@@ -13,7 +13,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 static struct termios oldtio;
 
@@ -33,14 +33,14 @@ int initSerialPort(int port)
   switch (port)
   {
   case 0:
-    if(DEBUG)
-      strcpy(serialPort, "/dev/pts/3");
+    if (DEBUG)
+      strcpy(serialPort, "/dev/pts/1");
     else
       strcpy(serialPort, "/dev/ttyS0");
     break;
   case 1:
-    if(DEBUG)
-      strcpy(serialPort, "/dev/pts/4");
+    if (DEBUG)
+      strcpy(serialPort, "/dev/pts/2");
     else
       strcpy(serialPort, "/dev/ttyS1");
     break;
@@ -119,11 +119,9 @@ int llopen(int port, int mode)
 
   setPhase(open_phase);
 
-  printf("Enter switch\n");
   switch (mode)
   {
   case TRANSMITTER:
-    printf("TRANSMITTER\n");
     if (write_suFrame(fd, C_SET) == -1)
     {
       return -1;
@@ -138,8 +136,6 @@ int llopen(int port, int mode)
     break;
 
   case RECEIVER:
-        printf("RECEIVER\n");
-
     if (read_suFrame(fd, C_SET) == -1)
     {
       return -1;
@@ -168,11 +164,11 @@ int llread(int fd, unsigned char *buffer)
   initFlags(&flags);
 
   result = read_dataFrame(fd, buffer, &flags);
-  printf("Received DATA\n");
 
-  //When there is repeated data, buffer will have no content
-  if (flags.repeated_data){
-    if(NR == 1)
+  // When there is repeated data, buffer will have no content
+  if (flags.repeated_data)
+  {
+    if (NR == 1)
       write_suFrame(fd, RR_1);
     else
       write_suFrame(fd, RR_0);
@@ -180,15 +176,15 @@ int llread(int fd, unsigned char *buffer)
     return 0;
   }
 
-  //When DISC is received, buffer will have no content
+  // When DISC is received, buffer will have no content
   if (flags.send_disc)
   {
-    if(write_suFrame(fd, C_DISC) < 0)
+    if (write_suFrame(fd, C_DISC) < 0)
       return -1;
     printf("Sent DISC\n");
 
     setPhase(close_phase);
-    if(read_suFrame(fd, C_UA) < 0)
+    if (read_suFrame(fd, C_UA) < 0)
       return -1;
     printf("Received UA\n");
 
@@ -196,6 +192,7 @@ int llread(int fd, unsigned char *buffer)
     return 0;
   }
 
+  printf("Received DATA\n");
   if (flags.data_ok)
   {
     if (NR == 1)
@@ -213,11 +210,13 @@ int llread(int fd, unsigned char *buffer)
   }
   else
   {
-    if (NR == 1){
+    if (NR == 1)
+    {
       write_suFrame(fd, REJ_1);
       printf("Sent REJ_1\n");
     }
-    else{
+    else
+    {
       write_suFrame(fd, REJ_0);
       printf("Sent REJ_0\n");
     }
@@ -242,7 +241,7 @@ int llwrite(int fd, unsigned char *buffer, int length)
 
     if (result < 0)
       return -1;
-    
+
     control = read_responseFrame(fd);
     printf("Received %x\n", control);
 
@@ -251,21 +250,22 @@ int llwrite(int fd, unsigned char *buffer, int length)
   return result;
 }
 
-int llclose(int fd) {
+int llclose(int fd)
+{
   setPhase(close_phase);
-  if(write_suFrame(fd, C_DISC) < 0)
+  if (write_suFrame(fd, C_DISC) < 0)
     return -1;
   printf("Sent DISC\n");
 
-  if(read_suFrame(fd, C_DISC) < 0)
+  if (read_suFrame(fd, C_DISC) < 0)
     return -1;
   printf("Received DISC\n");
 
-  if(write_suFrame(fd, C_UA) < 0)
+  if (write_suFrame(fd, C_UA) < 0)
     return -1;
   printf("Sent C_UA\n");
 
-  if(closeSerialPort(fd) < 0)
+  if (closeSerialPort(fd) < 0)
     return -1;
 
   return 0;

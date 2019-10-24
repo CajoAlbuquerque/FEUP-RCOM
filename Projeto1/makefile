@@ -3,8 +3,8 @@ CFLAGS = -Wall -Wextra -pedantic #-Werror
 
 EXEC = app
 
-all: statemachine.o receiver.o transmitter.o alarm.o application.o protocol.o macros.h
-	$(CC) $(CFLAGS) statemachine.o receiver.o transmitter.o alarm.o application.o protocol.o -o $(EXEC)
+all: statemachine.o receiver.o transmitter.o alarm.o teste.c protocol.o macros.h
+	$(CC) $(CFLAGS) statemachine.o receiver.o transmitter.o alarm.o teste.c protocol.o -o $(EXEC)
 
 transmitter.o: transmitter/transmitter.c transmitter/transmitter.h
 	$(CC) $(CFLAGS) -c transmitter/transmitter.c

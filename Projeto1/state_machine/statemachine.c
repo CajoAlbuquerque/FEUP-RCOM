@@ -47,7 +47,6 @@ int suFrameSM(unsigned char byte, unsigned char control, int state)
 int readSM(unsigned char byte, int state)
 {
   static unsigned char control;
-  printf("SM byte value: %X\n", byte);
   switch (state)
   {
   case START:
@@ -66,18 +65,14 @@ int readSM(unsigned char byte, int state)
   case A_RCV:
     if (byte == FLAG) {
       state = FLAG_RCV;
-      printf("WE NOOBS\n");
     }
     else if (byte == CONTROL_0 || byte == CONTROL_1 || byte == C_DISC)
     {
-      printf("cajo, worst debugger \n");
       control = byte;
       state = C_RCV;
     }
     else {
       state = START;
-      printf("CAJO, bad debugger\n");
-
     }
     break;
   case C_RCV:

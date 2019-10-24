@@ -2,6 +2,7 @@
 #include "../macros.h"
 #include "../state_machine/statemachine.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -35,14 +36,16 @@ int parseMessage(unsigned char *buffer, int length)
 
   msg_length = SU_FRAME_SIZE + 2 * (length) + 1;
 
-  msg = (unsigned char *)malloc( msg_length * sizeof(unsigned char));
-  
-  if(msg == NULL){
+  msg = (unsigned char *)malloc(msg_length * sizeof(unsigned char));
+
+  if (msg == NULL)
+  {
     return -1;
   }
 
-  if(NS == 1) {
-    control=CONTROL_1;
+  if (NS == 1)
+  {
+    control = CONTROL_1;
   }
   else
   {
@@ -100,21 +103,23 @@ int sendMessage(int fd)
 
 int read_responseFrame(int fd)
 {
-  int state = START;
+  int state = START, read_res;
   unsigned char byte;
   unsigned char control;
 
   alarm(TIMEOUT_INTERVAL);
   while (state != END)
   {
-    printf("Start cycle\n");
-
-    if (read(fd, &byte, 1) < 0)
+    read_res = read(fd, &byte, 1);
+    
+    if (read_res < 0 && errno == EINTR){
+      errno = 0;
+      continue;
+    }
+    else if (read_res < 0)
     {
       return -1;
     }
-
-    printf("After read\n");
 
     state = writeSM(byte, state);
     if (state == C_RCV)
@@ -132,7 +137,7 @@ int parseControl(unsigned char control)
 {
   if (control == RR_0 || control == RR_1)
   {
-    if(control == RR_0)
+    if (control == RR_0)
       NS = 0;
     else
       NS = 1;

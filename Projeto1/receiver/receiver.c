@@ -1,7 +1,10 @@
 #include "receiver.h"
 #include "../macros.h"
 #include "../state_machine/statemachine.h"
+#include "../alarm/alarm.h"
 
+#include <signal.h>
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -35,17 +38,17 @@ int read_suFrame(int fd, unsigned char control)
   {
     read_res = read(fd, &byte, 1);
 
-    if (read_res > 0)
-    {
-      alarm(0);
+    if (read_res < 0 && errno == EINTR){
+      errno = 0;
+      continue;
     }
     else if (read_res < 0)
-    {
       return -1;
-    }
 
     state = suFrameSM(byte, control, state);
   }
+
+  alarm(0);
 
   return 0;
 }
@@ -57,13 +60,10 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
   unsigned int current_index = 0;
   int state = START;
 
-  printf("Started read_dataFrame\n");
   while (state != END)
   {
     if (read(fd, &byte, 1) < 0)
       return -1;
-
-    printf("Read DATA byte. Value: %X\n", byte);
 
     state = readSM(byte, state);
 
@@ -118,7 +118,6 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
       current_index++;
     }
   }
-  printf("Ended read_dataFrame\n");
 
   return current_index;
 }

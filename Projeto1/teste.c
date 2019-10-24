@@ -3,42 +3,75 @@
 #include <stdio.h>
 #include <string.h>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
+    if(argc < 3){ 
+    }
+    
     int fd;
 
-    if(atoi(argv[2]) == TRANSMITTER){ // 0
+    if (atoi(argv[2]) == TRANSMITTER)
+    { // 0
+        printf("-------------------Started Open Phase \n");
         fd = llopen(atoi(argv[1]), TRANSMITTER);
-        if(fd < 0){
-            perror("Error on open\n");
+        if (fd < 0)
+        {
+            perror("Error on open");
             exit(1);
         }
+        printf("-------------------Ended Open Phase \n");
+        printf("-------------------Started Data Phase \n");
         unsigned char msg[25] = "ola Cajo, Helena e Joca!";
-        if(llwrite(fd, msg, strlen(msg)) < 0){
-            perror("Error on write\n");
+        printf("Message is : %s\n", msg);
+        printf("msg size is = %d\n", strlen(msg) + 1);
+        if (llwrite(fd, msg, strlen(msg) + 1) < 0)
+        {
+            perror("Error on write");
             exit(1);
         }
 
-        if(llclose(fd) < 0){
-            perror("Error on close\n");
+        printf("-------------------Ended Data Phase \n");
+        printf("-------------------Started Close Phase \n");
+        if (llclose(fd) < 0)
+        {
+            perror("Error on close");
             exit(1);
         }
+        printf("-------------------Ended Close Phase \n");
     }
     else if (atoi(argv[2]) == RECEIVER)
     {
+        printf("-------------------Started Open Phase \n");
         fd = llopen(atoi(argv[1]), RECEIVER);
-        if(fd < 0){
-            perror("Error on open\n");
+        if (fd < 0)
+        {
+            perror("Error on open");
             exit(1);
         }
+        printf("-------------------Ended Open Phase \n");
+        printf("-------------------Started Data Phase \n");
         unsigned char msg[255];
-        if(llread(fd, msg) < 0) {
-            perror("Error on read\n");
-            exit(1);
+        while (1)
+        {
+            int size = llread(fd, msg);
+            if (size < 0)
+            {
+                perror("Error on read");
+                exit(1);
+            }
+            else if (size == 0)
+            {
+                break;
+            }
+            else
+            {
+                // msg[size - 1] = '\0';
+                printf("Success! MSG = %s\n", msg);
+                printf("msg size is = %d\n", size);
+            }
         }
-
-        printf("Success MSG = %s\n", msg);
+        printf("-------------------Ended Data Phase and Closed \n");
     }
-    
 
     return 0;
 }

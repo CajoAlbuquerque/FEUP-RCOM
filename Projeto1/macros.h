@@ -36,7 +36,7 @@
 #define FLAG_SOL 0x5e
 
 // Timeout related values
-#define TIMEOUT_INTERVAL 10
+#define TIMEOUT_INTERVAL 3
 #define TIMEOUT_MAX_ATTEMPTS 3
 
 // State Machine states
