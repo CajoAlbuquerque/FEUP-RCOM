@@ -49,17 +49,21 @@ unsigned char* dataPacket(int sendSize, int sequenceNumber, unsigned char* data)
     return packet;
 }
 
-int receiveFile(){
-    int L1, L2, counter;
+int receiveDataPacket(int sendSize, unsigned char* data){
+	int control;
+	int L1, L2, counter;
     static int sequenceNumber = 0;
-    //int fileSize;
     int receiveSize = 0, readSize, receiveSequenceNumber;
-    
     unsigned char fileData[155], dataReceive[155];
-
-    readSize = llread(application.fileDescriptor, fileData);
-    receiveSize = fileData[0];
-    if(receiveSize < 0){
+    
+	readSize = llread(application.fileDescriptor, fileData);
+    control = fileData[0];
+    if(control == 3){
+		receivePacket(3);
+	} else if(control == 2){
+		return -1;
+	}
+    else if(receiveSize < 0){
         printf("Wrong receive size\n");
         exit(-1);
     }
@@ -83,7 +87,14 @@ int receiveFile(){
         dataReceive[counter] = fileData[4 + counter];
         counter++;
     }
+    return 0;
+}
+
+int receiveFile(){   
+    int fileSize;
     
+    fileSize = receivePacket(2);
+      
     return 0;
 }
 
@@ -93,19 +104,56 @@ int controlPacket(unsigned int control, int fileSize, unsigned char filename){
         exit(-1);
     }
 
-	unsigned char set[7];
-	
+	unsigned char set[24];
+	int i = 0;
     
     set[0] = control;
-    set[1] = fileSize;
-    set[2] = filename;
-
- //TODO
- 
-	llwrite(application.fileDescriptor, set, sizeof(set));
-
+    set[1] = 0;
+    set[2] = sizeof(fileSize);
+    i = 3 + sizeof(fileSize);
+    set[3] = fileSize;
+    set[i] = 1;
+    set[i+1] = sizeof(filename);
+    set[i+2] = filename;
+    i = 2 + sizeof(filename);
+    set[i] = '\0';
+    
+	llwrite(application.fileDescriptor, &set, sizeof(set));
 
     return 1;
+}
+
+int receivePacket(unsigned int controlE)
+{
+	unsigned int control;
+	unsigned char set[24];
+	int sizeoffileSize, sizeoffilename;
+	int fileSize; unsigned char filename;
+	
+	llread(application.fileDescriptor, &set);
+	int i = 1;
+    control = set[0];
+    if(control != controlE){
+		printf("Control diferent then the expected\n");
+		exit(-1);
+	}
+	while(set[i] != '\0'){		
+		if(set[i] == 0 ){
+			sizeoffileSize = set[i + 1];
+			fileSize = set[i + 2];
+			i = i + 2 + sizeoffileSize;
+		
+		} else if(set[i] == 1 ){
+			sizeoffilename = set[i+1];
+			filename = set[i+2];
+			i = i + 2 + sizeoffilename;
+		} else{
+			return -1;
+		}
+   
+	}    
+    return fileSize;
+	
 }
 
 int sendFile(char filename){
