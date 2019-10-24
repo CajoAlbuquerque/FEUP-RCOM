@@ -51,8 +51,10 @@ unsigned char* dataPacket(int sendSize, int sequenceNumber, unsigned char* data)
 
 int receiveFile(){
     int L1, L2, counter;
+    static int sequenceNumber = 0;
     //int fileSize;
-    int receiveSize = 0, sequenceNumber = 0, readSize;
+    int receiveSize = 0, readSize, receiveSequenceNumber;
+    
     unsigned char fileData[155], dataReceive[155];
 
     readSize = llread(application.fileDescriptor, fileData);
@@ -61,7 +63,12 @@ int receiveFile(){
         printf("Wrong receive size\n");
         exit(-1);
     }
-    sequenceNumber = fileData[1];
+    receiveSequenceNumber = fileData[1];
+    if(receiveSequenceNumber != sequenceNumber){
+		printf("Packet not receive\n");
+		exit(-1);
+	}
+    sequenceNumber = (sequenceNumber+1) % 255;
     if( sequenceNumber < 0){
         printf("Wrong sequece number\n");
         exit(-1);
@@ -80,23 +87,25 @@ int receiveFile(){
     return 0;
 }
 
-unsigned char* controlPacket(unsigned int control, int fileSize, unsigned char filename){
+int controlPacket(unsigned int control, int fileSize, unsigned char filename){
     if(control != 2 && control != 3){
         printf("control can't be different than 2 and 3");
         exit(-1);
     }
 
-	unsigned char *set;
+	unsigned char set[7];
 	
-	set = (unsigned char *)malloc(7 * sizeof(unsigned char));
     
     set[0] = control;
     set[1] = fileSize;
     set[2] = filename;
 
  //TODO
+ 
+	llwrite(application.fileDescriptor, set, sizeof(set));
 
-    return set;
+
+    return 1;
 }
 
 int sendFile(char filename){
@@ -110,7 +119,7 @@ int sendFile(char filename){
         dataSend = dataPacket(150, sequenceNumber, fileData);
         llwrite(application.fileDescriptor, dataSend, 150 + 4);
         free(dataSend);
-        sequenceNumber = (sequenceNumber+1) % 255;
+        sequenceNumber = (sequenceNumber+1) % 255; //sequecial number in modules of 255
     } 
     if((fileSize - sendSize) > 0){ 
         dataSend = dataPacket((fileSize - sendSize), sequenceNumber, fileData);

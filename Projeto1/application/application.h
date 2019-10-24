@@ -42,9 +42,9 @@ int receiveFile();
  * @param size of the all file
  * @param filename name of the file to transmit
  *
- *  @return data package
+ *  @return sucess
  */
-unsigned char* controlPacket(unsigned int control, int fileSize, unsigned char filename);
+int controlPacket(unsigned int control, int fileSize, unsigned char filename);
 
 /**
  *  sends a file
