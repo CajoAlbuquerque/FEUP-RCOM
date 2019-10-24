@@ -49,17 +49,18 @@ unsigned char* dataPacket(int sendSize, int sequenceNumber, unsigned char* data)
     return packet;
 }
 
-int receiveDataPacket(int sendSize, unsigned char* data){
+int receiveDataPacket( unsigned char* data, unsigned char *filename ){
+     
 	int control;
 	int L1, L2, counter;
     static int sequenceNumber = 0;
     int receiveSize = 0, readSize, receiveSequenceNumber;
-    unsigned char fileData[155], dataReceive[155];
+    unsigned char fileData[155];
     
 	readSize = llread(application.fileDescriptor, fileData);
     control = fileData[0];
     if(control == 3){
-		receivePacket(3);
+		receivePacket(3, filename);
 	} else if(control == 2){
 		return -1;
 	}
@@ -84,17 +85,22 @@ int receiveDataPacket(int sendSize, unsigned char* data){
         exit(-1);
     }
     while(readSize >= counter){
-        dataReceive[counter] = fileData[4 + counter];
+        data[counter] = fileData[4 + counter];
         counter++;
     }
     return 0;
 }
 
-int receiveFile(){   
+int receiveFile(){  
+    FILE *sendFile;   
     int fileSize;
-    
-    fileSize = receivePacket(2);
-      
+    unsigned char dataReceive[155];
+    unsigned char filename[25];
+    fileSize = receivePacket(2,filename);
+    sendFile = fopen(filename, "a");  
+    receiveDataPacket( dataReceive, filename );
+
+    fclose(sendFile);
     return 0;
 }
 
@@ -118,19 +124,19 @@ int controlPacket(unsigned int control, int fileSize, unsigned char filename){
     i = 2 + sizeof(filename);
     set[i] = '\0';
     
-	llwrite(application.fileDescriptor, &set, sizeof(set));
+	llwrite(application.fileDescriptor, set, sizeof(set));
 
     return 1;
 }
 
-int receivePacket(unsigned int controlE)
-{
+int receivePacket(unsigned int controlE, unsigned char *filename)
+{   
 	unsigned int control;
 	unsigned char set[24];
 	int sizeoffileSize, sizeoffilename;
-	int fileSize; unsigned char filename;
+	int fileSize;
 	
-	llread(application.fileDescriptor, &set);
+	llread(application.fileDescriptor, set);
 	int i = 1;
     control = set[0];
     if(control != controlE){
@@ -145,7 +151,7 @@ int receivePacket(unsigned int controlE)
 		
 		} else if(set[i] == 1 ){
 			sizeoffilename = set[i+1];
-			filename = set[i+2];
+			*filename = set[i+2];
 			i = i + 2 + sizeoffilename;
 		} else{
 			return -1;
@@ -162,27 +168,35 @@ int sendFile(char filename){
 
     fileData = getCharBuffer( filename, &fileSize);
     controlPacket(2, fileSize, filename);
+    printf("Sending control packet with control 2\n");
 
     while((fileSize - sendSize) >= 150){ //if possible sends 150 bytes of data
         dataSend = dataPacket(150, sequenceNumber, fileData);
         llwrite(application.fileDescriptor, dataSend, 150 + 4);
+        printf("Send first data of 150 bytes\n");
         free(dataSend);
         sequenceNumber = (sequenceNumber+1) % 255; //sequecial number in modules of 255
     } 
     if((fileSize - sendSize) > 0){ 
         dataSend = dataPacket((fileSize - sendSize), sequenceNumber, fileData);
         llwrite(application.fileDescriptor, dataSend, (fileSize - sendSize));
+        printf("Send last data \n");
         free(dataSend);
     } 
-    
+    printf("Sending control packet with control 3\n");
     controlPacket(3, fileSize, filename);
     return 0;
 }
 
 
 int main(int argc, char **argv){
-    if (argc < 3) {
-        printf("Usage: %s <serial port number> <TRANSMITTER || RECEIVER> <file name>\n", argv[0]);
+    if (argc < 2) {
+        printf("Usage: %s <serial port number> <TRANSMITTER || RECEIVER> <file name to send>\n", argv[0]);
+        exit(1);
+    }
+
+    if ((strcmp("TRANSMITTER",argv[2]) != 0) &&argc < 3) {
+        printf("Usage: %s <serial port number> <TRANSMITTER || RECEIVER>  <file name to send>\n", argv[0]);
         exit(1);
     }
 
