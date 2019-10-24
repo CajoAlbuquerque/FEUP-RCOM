@@ -30,7 +30,7 @@ int read_suFrame(int fd, unsigned char control)
   int read_res, state = START;
   unsigned char byte;
 
-  alarm(3);
+  alarm(TIMEOUT_INTERVAL);
   while (state != END)
   {
     read_res = read(fd, &byte, 1);
@@ -57,10 +57,13 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
   unsigned int current_index = 0;
   int state = START;
 
+  printf("Started read_dataFrame\n");
   while (state != END)
   {
     if (read(fd, &byte, 1) < 0)
       return -1;
+
+    printf("Read DATA byte. Value: %X\n", byte);
 
     state = readSM(byte, state);
 
@@ -115,6 +118,7 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
       current_index++;
     }
   }
+  printf("Ended read_dataFrame\n");
 
   return current_index;
 }

@@ -8,6 +8,7 @@
 #include <string.h>
 
 static unsigned char *msg;
+static unsigned int msg_length;
 static unsigned int NS = 0;
 
 int write_suFrame(int fd, unsigned char control)
@@ -32,17 +33,31 @@ int parseMessage(unsigned char *buffer, int length)
   unsigned char control;
   unsigned int j = 0;
 
-  msg = (unsigned char *)malloc((SU_FRAME_SIZE + 2 * (length) + 1) * sizeof(unsigned char));
+  msg_length = SU_FRAME_SIZE + 2 * (length) + 1;
+
+  msg = (unsigned char *)malloc( msg_length * sizeof(unsigned char));
+  
   if(msg == NULL){
     return -1;
   }
 
-  NS ? control = CONTROL_1 : CONTROL_0;
+  if(NS == 1) {
+    control=CONTROL_1;
+  }
+  else
+  {
+    control = CONTROL_0;
+  }
 
   msg[F1_INDEX] = FLAG;
   msg[A_INDEX] = A;
   msg[C_INDEX] = control;
   msg[BCC_INDEX] = (A ^ control);
+
+  // printf("%x\n",msg[F1_INDEX]);
+  // printf("%x\n",msg[A_INDEX]);
+  // printf("%x\n",msg[C_INDEX]);
+  // printf("%x\n",msg[BCC_INDEX]);
 
   for (int i = 0; i < length; i++)
   {
@@ -80,7 +95,7 @@ int parseMessage(unsigned char *buffer, int length)
 
 int sendMessage(int fd)
 {
-  return write(fd, msg, strlen(msg));
+  return write(fd, msg, msg_length);
 }
 
 int read_responseFrame(int fd)
@@ -89,7 +104,7 @@ int read_responseFrame(int fd)
   unsigned char byte;
   unsigned char control;
 
-  alarm(3);
+  alarm(TIMEOUT_INTERVAL);
   while (state != END)
   {
     printf("Start cycle\n");
