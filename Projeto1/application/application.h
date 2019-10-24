@@ -54,5 +54,5 @@ int controlPacket(unsigned int control, int fileSize, unsigned char filename);
  */
 int sendFile(char filename);
 
-int receivePacket(unsigned int controlE);
+int receivePacket(unsigned int controlE, unsigned char *filename);
 
