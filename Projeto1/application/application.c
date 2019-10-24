@@ -9,19 +9,19 @@
 #include <fcntl.h>
 #include <string.h>
 
-unsigned char* getCharBuffer(unsigned char *filename, int *fileSize){
+unsigned char* getCharBuffer(char filename, int *fileSize){
     FILE *f;
     unsigned char *fileData;
     struct stat fData;
-    if((f = fopen((char *) filename, "rb")) == NULL)
+    if((f = fopen(&filename, "rb")) == NULL)
     {
         perror("Error opening the file :");
         exit(-1);
     }
-    stat((char*) filename, &fData);
+    stat(&filename, &fData);
     (*fileSize) = fData.st_size;
 
-    printf("Get %d bytes form file %d\n", *fileSize, *filename );
+    printf("Get %d bytes form file %d\n", *fileSize, filename );
 
     fileData = (unsigned char *)malloc(*fileSize);
 
@@ -80,13 +80,16 @@ int receiveFile(){
     return 0;
 }
 
-unsigned char controlPacket(unsigned int control, int fileSize, unsigned char filename){
+unsigned char* controlPacket(unsigned int control, int fileSize, unsigned char filename){
     if(control != 2 && control != 3){
         printf("control can't be different than 2 and 3");
         exit(-1);
     }
 
-    unsigned char set[7];
+	unsigned char *set;
+	
+	set = (unsigned char *)malloc(7 * sizeof(unsigned char));
+    
     set[0] = control;
     set[1] = fileSize;
     set[2] = filename;
@@ -96,18 +99,18 @@ unsigned char controlPacket(unsigned int control, int fileSize, unsigned char fi
     return set;
 }
 
-int sendFile(char *filename){
+int sendFile(char filename){
     int fileSize, sendSize = 0, sequenceNumber = 0;
     unsigned char *fileData, *dataSend;
 
     fileData = getCharBuffer( filename, &fileSize);
-    controlPacket(2, fileSize, *filename);
+    controlPacket(2, fileSize, filename);
 
     while((fileSize - sendSize) >= 150){ //if possible sends 150 bytes of data
         dataSend = dataPacket(150, sequenceNumber, fileData);
         llwrite(application.fileDescriptor, dataSend, 150 + 4);
         free(dataSend);
-        sequenceNumber = sequenceNumber++ % 255;
+        sequenceNumber = (sequenceNumber+1) % 255;
     } 
     if((fileSize - sendSize) > 0){ 
         dataSend = dataPacket((fileSize - sendSize), sequenceNumber, fileData);
@@ -115,7 +118,7 @@ int sendFile(char *filename){
         free(dataSend);
     } 
     
-    controlPacket(3, fileSize, *filename);
+    controlPacket(3, fileSize, filename);
     return 0;
 }
 
@@ -135,7 +138,7 @@ int main(int argc, char **argv){
     application.fileDescriptor = llopen(atoi(argv[1]), application.status);
 
     if(strcmp("TRANSMITTER", argv[2]) == 0){
-        sendFile(argv[3]);
+        sendFile(*argv[3]);
         llclose(application.fileDescriptor);
     } else {
         receiveFile();

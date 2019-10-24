@@ -14,7 +14,7 @@ struct applicationLayer application;
  *
  *  @return Cchars with the content of the file
  */
-unsigned char* getCharBuffer(unsigned char *filename, int *fileSize);
+unsigned char* getCharBuffer(char filename, int *fileSize);
 
 /**
  * creats the data package to send to llwrite
@@ -52,5 +52,5 @@ unsigned char* controlPacket(unsigned int control, int fileSize, unsigned char f
  * @param filename name of the file to transmit
  *  @return 
  */
-int sendFile(char *filename);
+int sendFile(char filename);
 
