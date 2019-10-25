@@ -1,7 +1,7 @@
 struct applicationLayer
 {
     int fileDescriptor; /* Serial port descriptor */
-    int status; /* TRANSMITTER | RECEIVER */     
+    int status;         /* TRANSMITTER | RECEIVER */
 } applicationLayer;
 
 struct applicationLayer application;
@@ -14,7 +14,7 @@ struct applicationLayer application;
  *
  *  @return all the chars in the file
  */
-unsigned char* getCharBuffer(char filename, int *fileSize);
+unsigned char *getCharBuffer(char *filename, int *fileSize);
 
 /**
  * creates the data package to send to llwrite
@@ -25,7 +25,7 @@ unsigned char* getCharBuffer(char filename, int *fileSize);
  *
  *  @return data package
  */
-unsigned char* dataPacket(int sendSize, int sequenceNumber, unsigned char* filename);
+unsigned char *dataPacket(int sendSize, int sequenceNumber, unsigned char *filename);
 
 /**
  *  receives a file
@@ -44,7 +44,7 @@ int receiveFile();
  *
  *  @return success
  */
-int controlPacket(unsigned int control, int fileSize, unsigned char filename);
+int controlPacket(unsigned int control, int fileSize, char *filename);
 
 /**
  *  sends a file
@@ -52,7 +52,7 @@ int controlPacket(unsigned int control, int fileSize, unsigned char filename);
  * @param filename name of the file to transmit
  *  @return 
  */
-int sendFile(char filename);
+int sendFile(char *filename);
 
 /**
  * receives the control package
@@ -63,4 +63,3 @@ int sendFile(char filename);
  *  @return success
  */
 int receiveControlPacket2(unsigned char *filename);
-
