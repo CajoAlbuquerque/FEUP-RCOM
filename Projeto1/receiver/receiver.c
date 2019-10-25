@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static unsigned int NR = 1;
+static unsigned int NR = 0;
 
 void initFlags(flags_t *flags)
 {
