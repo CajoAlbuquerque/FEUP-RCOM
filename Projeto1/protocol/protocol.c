@@ -117,11 +117,11 @@ int llopen(int port, int mode)
   if (initializeHandler(fd) == -1)
     return -1;
 
-  setPhase(open_phase);
 
   switch (mode)
   {
   case TRANSMITTER:
+    setPhase(open_phase);
     if (write_suFrame(fd, C_SET) == -1)
     {
       return -1;
@@ -132,14 +132,17 @@ int llopen(int port, int mode)
     {
       return -1;
     }
+    resetTimeouts();
     printf("Received UA\n");
     break;
 
   case RECEIVER:
+    setPhase(receiver_phase);
     if (read_suFrame(fd, C_SET) == -1)
     {
       return -1;
     }
+    resetTimeouts();
     printf("Received SET\n");
 
     if (write_suFrame(fd, C_UA) == -1)
@@ -164,6 +167,7 @@ int llread(int fd, unsigned char *buffer)
   initFlags(&flags);
 
   result = read_dataFrame(fd, buffer, &flags);
+  resetTimeouts();
 
   // When there is repeated data, buffer will have no content
   if (flags.repeated_data)
@@ -179,6 +183,7 @@ int llread(int fd, unsigned char *buffer)
   // When DISC is received, buffer will have no content
   if (flags.send_disc)
   {
+    sleep(7);
     if (write_suFrame(fd, C_DISC) < 0)
       return -1;
     printf("Sent DISC\n");
@@ -186,6 +191,7 @@ int llread(int fd, unsigned char *buffer)
     setPhase(close_phase);
     if (read_suFrame(fd, C_UA) < 0)
       return -1;
+    resetTimeouts();
     printf("Received UA\n");
 
     closeSerialPort(fd);
@@ -203,7 +209,7 @@ int llread(int fd, unsigned char *buffer)
     }
     else
     {
-      setNR(0);
+      setNR(1);
       write_suFrame(fd, RR_1);
       printf("Sent RR_1\n");
     }
@@ -212,11 +218,13 @@ int llread(int fd, unsigned char *buffer)
   {
     if (NR == 1)
     {
+      result = 0;
       write_suFrame(fd, REJ_1);
       printf("Sent REJ_1\n");
     }
     else
     {
+      result = 0;
       write_suFrame(fd, REJ_0);
       printf("Sent REJ_0\n");
     }
@@ -243,7 +251,22 @@ int llwrite(int fd, unsigned char *buffer, int length)
       return -1;
 
     control = read_responseFrame(fd);
-    printf("Received %x\n", control);
+    resetTimeouts();
+    switch (control)
+    {
+    case RR_0:
+      printf("Received RR_0\n");
+      break;
+    case RR_1:
+      printf("Received RR_1\n");
+      break;
+    case REJ_0:
+      printf("Received REJ_0\n");
+      break;
+    case REJ_1:
+      printf("Received REJ_1\n");
+      break;
+    }
 
   } while (!parseControl(control));
 
@@ -259,8 +282,10 @@ int llclose(int fd)
 
   if (read_suFrame(fd, C_DISC) < 0)
     return -1;
+  resetTimeouts();
   printf("Received DISC\n");
 
+  sleep(7);
   if (write_suFrame(fd, C_UA) < 0)
     return -1;
   printf("Sent C_UA\n");

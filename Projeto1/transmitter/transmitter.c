@@ -111,8 +111,9 @@ int read_responseFrame(int fd)
   while (state != END)
   {
     read_res = read(fd, &byte, 1);
-    
-    if (read_res < 0 && errno == EINTR){
+
+    if (read_res < 0 && errno == EINTR)
+    {
       errno = 0;
       continue;
     }

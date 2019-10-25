@@ -44,21 +44,25 @@ void timeoutHandler(int signo)
   timeouts++;
   if (timeouts < TIMEOUT_MAX_ATTEMPTS)
   {
-    if (phase == open_phase)
+    switch (phase)
     {
+    case open_phase:
       write_suFrame(serial_fd, C_SET);
       printf("Resent SET\n");
-    }
-    else if (phase == data_phase)
-    {
-      sendMessage(serial_fd); //TODO: FIX
+      break;
+    case data_phase:
+      sendMessage(serial_fd);
       printf("Resent Data\n");
-    }
-    else if (phase == close_phase)
-    {
+      break;
+    case close_phase:
       write_suFrame(serial_fd, C_DISC);
       printf("Resent DISC\n");
+      break;
+    
+    default:
+      break;
     }
+
     // Alarm is set again
     alarm(TIMEOUT_INTERVAL);
   }

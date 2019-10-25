@@ -3,7 +3,8 @@
 typedef enum { 
     open_phase,
     data_phase,
-    close_phase
+    close_phase,
+    receiver_phase
 } phase_t;
 
 /**

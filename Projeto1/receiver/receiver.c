@@ -38,7 +38,8 @@ int read_suFrame(int fd, unsigned char control)
   {
     read_res = read(fd, &byte, 1);
 
-    if (read_res < 0 && errno == EINTR){
+    if (read_res < 0 && errno == EINTR)
+    {
       errno = 0;
       continue;
     }
@@ -57,13 +58,21 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
 {
   unsigned char current_bcc2 = 0;
   unsigned char byte;
-  unsigned int current_index = 0;
+  unsigned int current_index = 0, read_res;
   int state = START;
 
+  alarm(TIMEOUT_INTERVAL);
   while (state != END)
   {
-    if (read(fd, &byte, 1) < 0)
+    read_res = read(fd, &byte, 1);
+    if (read_res < 0 && errno == EINTR){
+      errno = 0;
+      continue;
+    }
+    else if (read_res < 0)
+    {
       return -1;
+    }
 
     state = readSM(byte, state);
 
@@ -118,6 +127,7 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
       current_index++;
     }
   }
+  alarm(0);
 
-  return current_index;
+  return current_index - 1;
 }
