@@ -57,11 +57,6 @@ int parseMessage(unsigned char *buffer, int length)
   msg[C_INDEX] = control;
   msg[BCC_INDEX] = (A ^ control);
 
-  // printf("%x\n",msg[F1_INDEX]);
-  // printf("%x\n",msg[A_INDEX]);
-  // printf("%x\n",msg[C_INDEX]);
-  // printf("%x\n",msg[BCC_INDEX]);
-
   for (int i = 0; i < length; i++)
   {
     // Byte stuffing

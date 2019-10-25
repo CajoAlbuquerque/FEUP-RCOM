@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static unsigned int NR = 0;
+static unsigned int NR = 1;
 
 void initFlags(flags_t *flags)
 {
@@ -65,7 +65,8 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
   while (state != END)
   {
     read_res = read(fd, &byte, 1);
-    if (read_res < 0 && errno == EINTR){
+    if (read_res < 0 && errno == EINTR)
+    {
       errno = 0;
       continue;
     }
@@ -78,21 +79,11 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
 
     if (state == C_RCV)
     { //Checking for repeated data
-      if (byte == CONTROL_0 && NR == 1)
-      {
-        printf("Received Repeated Data 0\n");
+      if (byte == CONTROL_0 && NR == 1 ||
+          byte == CONTROL_1 && NR == 0)
         flags->repeated_data = TRUE;
-      }
-      else if (byte == CONTROL_1 && NR == 0)
-      {
-        printf("Received Repeated Data 1\n");
-        flags->repeated_data = TRUE;
-      }
       else if (byte == C_DISC)
-      {
-        printf("Received DISC\n");
         flags->send_disc = TRUE;
-      }
     }
     /*
       When repeated data is sent by the transmitter,

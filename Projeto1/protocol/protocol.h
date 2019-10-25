@@ -23,7 +23,7 @@ int llopen(int port, int mode);
  *  @param fd File descriptor of the serial port
  *  @param buffer Array of characters on which the data will be saved
  *
- *  @return Number of characters read (buffer length) on success, -1 otherwise.
+ *  @return Number of characters read (buffer length) on success, -1 on connection closing and -2 on error.
  */
 int llread(int fd, unsigned char *buffer);
 

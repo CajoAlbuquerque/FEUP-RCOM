@@ -172,10 +172,16 @@ int llread(int fd, unsigned char *buffer)
   // When there is repeated data, buffer will have no content
   if (flags.repeated_data)
   {
-    if (NR == 1)
+    if (NR == 1){
+      printf("Received Repeated Data 0\n");
       write_suFrame(fd, RR_1);
-    else
+      printf("Sent RR_1\n");
+    }
+    else{
+      printf("Received Repeated Data 1\n");
       write_suFrame(fd, RR_0);
+      printf("Sent RR_0\n");
+    }
 
     return 0;
   }
@@ -183,19 +189,20 @@ int llread(int fd, unsigned char *buffer)
   // When DISC is received, buffer will have no content
   if (flags.send_disc)
   {
+    printf("Received DISC\n");
     sleep(7);
     if (write_suFrame(fd, C_DISC) < 0)
-      return -1;
+      return -2;
     printf("Sent DISC\n");
 
     setPhase(close_phase);
     if (read_suFrame(fd, C_UA) < 0)
-      return -1;
+      return -2;
     resetTimeouts();
     printf("Received UA\n");
 
     closeSerialPort(fd);
-    return 0;
+    return -1;
   }
 
   printf("Received DATA\n");

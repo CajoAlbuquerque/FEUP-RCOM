@@ -74,16 +74,16 @@ int main(int argc, char *argv[])
         while (1)
         {
             int size = llread(fd, msg);
-            if (size < 0)
+            if (size == -1)
+            {
+                break;
+            }
+            else if (size < 0)
             {
                 perror("Error on read");
                 exit(1);
             }
-            else if (size == 0)
-            {
-                break;
-            }
-            else
+            else if (size > 0)
             {
                 printf("Success! MSG = %s\n", msg);
                 printf("msg size is = %d\n", size);
