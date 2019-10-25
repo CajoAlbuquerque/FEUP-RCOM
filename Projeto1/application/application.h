@@ -25,7 +25,7 @@ unsigned char *getCharBuffer(char *filename, int *fileSize);
  *
  *  @return data package
  */
-unsigned char *dataPacket(int sendSize, int sequenceNumber, unsigned char *filename);
+int dataPacket(int sendSize, int sequenceNumber, unsigned char *data, unsigned char *packet);
 
 /**
  *  receives a file

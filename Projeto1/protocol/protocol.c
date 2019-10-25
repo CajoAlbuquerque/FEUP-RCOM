@@ -117,7 +117,6 @@ int llopen(int port, int mode)
   if (initializeHandler(fd) == -1)
     return -1;
 
-
   switch (mode)
   {
   case TRANSMITTER:
@@ -167,6 +166,7 @@ int llread(int fd, unsigned char *buffer)
   initFlags(&flags);
 
   result = read_dataFrame(fd, buffer, &flags);
+  printf("bytes Read: %d\n",result);
   resetTimeouts();
 
   // When there is repeated data, buffer will have no content
