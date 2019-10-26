@@ -132,7 +132,7 @@ int sendFile(char *filename)
     printf("sendSize: %d\n", sendSize);
 
     printf("Sending control packet with control 3\n");
-    //controlPacket(3, fileSize, filename);
+    controlPacket(3, fileSize, filename);
 
     free(dataSend);
     return 0;
@@ -143,7 +143,7 @@ int receiveControlPacket(int control,unsigned char *filename)
     unsigned char * controlPac;
     int fileSize = 0;
 
-    controlPac = (unsigned char *)malloc(60 *sizeof(unsigned char));
+    controlPac = (unsigned char *)malloc(70 *sizeof(unsigned char));
 
 	if (llread(application.fileDescriptor, controlPac) < 0) {
 		printf("ERROR in rcvCtrlPkt(): \n");
@@ -162,7 +162,7 @@ int receiveControlPacket(int control,unsigned char *filename)
 
 	int i, fileSizeLength = (controlPac[2] - '0'), j = 3;
 
-	char fileSizeStr[20];
+	char fileSizeStr[25];
 
 	for(i = 0; i < fileSizeLength; i++) {
 		fileSizeStr[i] = controlPac[j];
@@ -190,7 +190,15 @@ int receiveControlPacket(int control,unsigned char *filename)
 	}
 
 	pathStr[i] = '\0';
-	strcpy(filename, pathStr);
+
+    if (3 == control && (strcmp(filename,pathStr) != 0)) {
+        //compare with the other filename
+        printf("Name of received file can be wrong!\n");
+    }
+    else{
+        strcpy(filename, pathStr);
+    }
+
     free(controlPac);
 	return fileSize;
 
@@ -207,18 +215,16 @@ int receiveDataPacket(FILE *sendFile, unsigned char *filename, int *fileWritten)
 
     readSize = llread(application.fileDescriptor, fileData);
 
-    printf("Read Size: %d\n", readSize);
-
-    *fileWritten += (readSize - 4); //control, sequence number and L1 and L2 aren't data
-
     control = fileData[0];
 
     if ((fileData[0] - '0') == 3)
     {
         printf("Receive control Packet 3 to soon \n");
+        return -1;
     } 
     else if (control == 2)
     {
+        //receive control 2 twice, ignoring
         return -1;
     }
     else if (control < 0)
@@ -232,26 +238,26 @@ int receiveDataPacket(FILE *sendFile, unsigned char *filename, int *fileWritten)
     if (receiveSequenceNumber != sequenceNumber)
     {
         printf("Packet not receive, wrong sequence number\n");
-        exit(-1);
+        return -1;
     } 
-    sequenceNumber = (sequenceNumber + 1) % 255;
+
     L2 = fileData[2];
     L1 = fileData[3];
 
     if ((readSize-4)  != ((256 * L2) + L1))
     {
         printf("Wrong Reception, L1 and L2 don't mach readSize \n");
-        exit(-1);
+        return -1;
     }
 
     //puts char by char
     for(int i =0 ; i < (readSize-4); i++)
     {
         putc(fileData[4 + i], sendFile);
-        printf("%c", fileData[4 + i]);
-
     } 
-
+    //if everything went well, and only then, change values
+    sequenceNumber = (sequenceNumber + 1) % 255;
+    *fileWritten += (readSize - 4); //control, sequence number and L1 and L2 aren't data
     return 0;
 }
 
@@ -265,7 +271,7 @@ int receiveFile()
     fileSize = receiveControlPacket(2, filename); 
 
     //in the same pc has to exist !!!
-    filename = "fff.txt";
+    filename = "bigPic.jpg";
 
     sendFile = fopen(filename, "a");
     if(sendFile == NULL){
@@ -277,7 +283,8 @@ int receiveFile()
         receiveDataPacket(sendFile, filename, &fileWritten);
         printf("file Written: %d\n", fileWritten);
     }
-   // receiveControlPacket(3, filename);
+    printf("Receiving control packet with control 3\n");
+    receiveControlPacket(3, filename);
     fclose(sendFile);
     return 0;
 }
