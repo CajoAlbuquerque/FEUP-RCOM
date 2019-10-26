@@ -145,7 +145,7 @@ int receiveControlPacket2(unsigned char *filename)
     unsigned char* set;
     int sizeoffileSize, sizeoffilename;
     int fileSize;
-    set = (unsigned char *)malloc(25 *sizeof(char));
+    set = (unsigned char *)malloc(25 *sizeof(unsigned char));
 
     int readBytes = llread(application.fileDescriptor, set);
     printf("%d\n", readBytes);
@@ -272,7 +272,9 @@ int receiveDataPacket(FILE *sendFile, unsigned char *filename, int *fileWritten)
         printf("%c", data[i]);
 
     } 
-    fputs(data, sendFile);
+    while( fputs(data, sendFile) == EOF){
+        printf("Couldn't put data in th file, trying again\n");
+    }
 
     free(data);
 
@@ -309,6 +311,7 @@ int receiveFile()
         receiveDataPacket(sendFile, filename, &fileWritten);
         printf("file Written: %d\n", fileWritten);
     }
+
     fclose(sendFile);
     return 0;
 }
