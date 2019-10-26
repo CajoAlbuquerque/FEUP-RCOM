@@ -48,3 +48,5 @@
 #define DATA_LOOP 5
 #define END 6
 
+//transmit size
+#define TRANSMIT_SIZE 160

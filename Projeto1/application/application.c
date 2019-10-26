@@ -46,9 +46,9 @@ int dataPacket(int sendSize, int sequenceNumber, unsigned char *data, unsigned c
     packet[2] = L2;
     packet[3] = L1;
   
-    while (count <= (sendSize-4))
+    while (count <= sendSize)
     {
-        packet[4 + count] = data[count + (sequenceNumber * 146)];
+        packet[4 + count] = data[count + (sequenceNumber * TRANSMIT_SIZE)];
         count++;
     }
 
@@ -104,32 +104,34 @@ int sendFile(char *filename)
     int sendSize = 0, sequenceNumber = 0;
     unsigned char *fileData, *dataSend;
 
-    dataSend = (unsigned char *)malloc(150*sizeof(char));
+    dataSend = (unsigned char *)malloc(TRANSMIT_SIZE * sizeof(char));
 
     fileData = getCharBuffer(filename, &fileSize);
     //controlPacket(2, fileSize, filename);
     //printf("Sended control packet with control 2\n");
 
-    while ((fileSize - sendSize) >= 150)
-    { //if possible sends 150 bytes of data
+    while ((fileSize - sendSize) >= TRANSMIT_SIZE)
+    { //if possible sends TRANSMIT_SIZE bytes of data
        
-        sendSize += (150 - 4); //each time only 146 are really data
-        dataPacket(150, sequenceNumber, fileData, dataSend );
-        llwrite(application.fileDescriptor, dataSend, 150);      
-        printf("Send 150 bytes of data\n");
+        sendSize += TRANSMIT_SIZE; //each time only TRANSMIT_SIZE are really data
+        dataPacket(TRANSMIT_SIZE, sequenceNumber, fileData, dataSend );
+        llwrite(application.fileDescriptor, dataSend, TRANSMIT_SIZE + 4);      
+
+        printf("Send size: %d \n", sendSize );
         sequenceNumber = (sequenceNumber + 1) % 255; //sequencial number in modules of 255
+
     }
     if ((fileSize - sendSize) > 0)
     {
-        printf("Send last bytes data \n");
-        dataPacket((fileSize - sendSize) + 4, sequenceNumber, fileData, dataSend);
+        printf("Send last %d bytes data \n",(fileSize - sendSize) );
+        dataPacket((fileSize - sendSize) , sequenceNumber, fileData, dataSend);
         llwrite(application.fileDescriptor, dataSend, ((fileSize - sendSize)+4));
         sendSize += (fileSize - sendSize);
         
     }
     printf("sendSize: %d\n", sendSize);
-    free(dataSend);
-    printf("Sending control packet with control 3\n");
+
+   // printf("Sending control packet with control 3\n");
    // controlPacket(3, fileSize, filename);
 
    free(dataSend);
@@ -219,12 +221,12 @@ int receiveDataPacket(FILE *sendFile, unsigned char *filename, int *fileWritten)
     int L1, L2;
     static int sequenceNumber = 0;
     int readSize, receiveSequenceNumber;
-    unsigned char fileData[150];
+    unsigned char fileData[TRANSMIT_SIZE +4];
     unsigned char *data;
 
     readSize = llread(application.fileDescriptor, fileData);
 
-    data = (unsigned char *)malloc((readSize -4) *sizeof(char));
+    data = (unsigned char *)malloc((readSize-4) *sizeof(unsigned char)); //the size of data the size of the effective data
 
     printf("Read Size: %d\n", readSize);
 
@@ -256,19 +258,20 @@ int receiveDataPacket(FILE *sendFile, unsigned char *filename, int *fileWritten)
     L2 = fileData[2];
     L1 = fileData[3];
 
-    if (readSize  != ((256 * L2) + L1))
+    if ((readSize-4)  != ((256 * L2) + L1))
     {
         printf("Wrong Reception, L1 and L2 don't mach readSize \n");
         exit(-1);
     }
 
-    //sends the content to the file, char by char
     for(int i =0 ; i < (readSize-4); i++)
     {
         data[i] = fileData[4 + i];
     } 
     fputs(data, sendFile);
+
     free(data);
+
     return 0;
 }
 
@@ -282,9 +285,12 @@ int receiveFile()
    /* fileSize = receiveControlPacket2(filename);   
     printf("File Size: %d\n", fileSize);*/
     //for testing only!
+    //fileSize = 10968;
+    //filename = "pinguim1.gif";
 
-    fileSize = 10968;
-    filename = "pinguim1.gif";
+    fileSize = 893;
+    filename = "Wor.txt";
+
 
     printf("Size of the file %d\n", fileSize);
 
@@ -296,7 +302,7 @@ int receiveFile()
     while (fileWritten < fileSize)
     {
         receiveDataPacket(sendFile, filename, &fileWritten);
-        printf("file Written: %d", fileWritten);
+        printf("file Written: %d\n", fileWritten);
     }
     fclose(sendFile);
     return 0;
