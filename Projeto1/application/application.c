@@ -1,4 +1,5 @@
 #include "application.h"
+#include "../macros.h"
 #include "../protocol/protocol.h"
 
 #include <stdio.h>
@@ -46,9 +47,10 @@ int dataPacket(int sendSize, int sequenceNumber, unsigned char *data, unsigned c
     packet[2] = L2;
     packet[3] = L1;
   
-    while (count <= sendSize)
+    while (count < sendSize)
     {
         packet[4 + count] = data[count + (sequenceNumber * TRANSMIT_SIZE)];
+        printf("%c", packet[4 + count]);
         count++;
     }
 
@@ -267,6 +269,8 @@ int receiveDataPacket(FILE *sendFile, unsigned char *filename, int *fileWritten)
     for(int i =0 ; i < (readSize-4); i++)
     {
         data[i] = fileData[4 + i];
+        printf("%c", data[i]);
+
     } 
     fputs(data, sendFile);
 
@@ -288,8 +292,9 @@ int receiveFile()
     //fileSize = 10968;
     //filename = "pinguim1.gif";
 
-    fileSize = 893;
-    filename = "Wor.txt";
+   
+   fileSize = 897;
+   filename = "Wor.txt";
 
 
     printf("Size of the file %d\n", fileSize);
