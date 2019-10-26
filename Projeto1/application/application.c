@@ -59,45 +59,40 @@ int dataPacket(int sendSize, int sequenceNumber, unsigned char *data, unsigned c
 
 int controlPacket(unsigned int control, int fileSize, char *filename)
 {
-    if (control != 2 && control != 3)
-    {
-        printf("control can't be different than 2 and 3");
-        exit(-1);
-    }
+    char sizeString[16];
+	sprintf(sizeString, "%d", fileSize);
 
-    unsigned char *set;
-    set = (unsigned char *)malloc(25 *sizeof(char));
+	int size = 5 + strlen(sizeString) + strlen(filename);
+    printf("size: %d", size);
+	unsigned char ctrlPckg[size];
 
-    int i = 0;
-    size_t fileLength = strlen(filename);
+	ctrlPckg[0] = control + '0';
+	ctrlPckg[1] = 0 + '0';
+	ctrlPckg[2] = strlen(sizeString) + '0';
 
-    set[0] = control;
-    //File Size
-    set[1] = 0;
-    set[2] = sizeof(fileSize);
+	int i, j = 3;
+	for(i = 0; i < strlen(sizeString); i++) {
+		ctrlPckg[j] = sizeString[i];
+		j++;;
+	}
 
-    printf("size of the file: %d\n",fileSize);
-    i = 3 + sizeof(fileSize);
-    set[3] = fileSize;
-    printf("set [3] = %d\n", set[3]);
-    printf("set [4] = %d\n", set[4]);
-    printf("i: %d\n", i);
-    // File Name
-    set[i] = 1;
-    set[i + 1] = fileLength + 1;
-    
-    printf("%ld", fileLength);
-    for(size_t j = 0; j <= (fileLength+1); j++) {
-        if(j == fileLength){
-            printf("total: %d\n", (i + 1 + j));
-            set[i+1+j] = '\0';
-        }
-        set[i+1+j] = filename[j];
-    }
-   
-    llwrite(application.fileDescriptor, set, sizeof(set));
-    free(set);
-    return 1;
+	ctrlPckg[j] = 1 + '0';
+	j++;
+	ctrlPckg[j] = strlen(filename) + '0';
+	j++;
+
+	for(i = 0; i < strlen(filename); i++) {
+		ctrlPckg[j] = filename[i];
+		j++;
+	}
+
+	if ( llwrite(application.fileDescriptor, ctrlPckg, size) < 0) {
+		printf("ERROR in sendCtrlPkt(): llwrite() function error!\n");
+		return -1;
+	}
+
+	return 0;
+ 
 }
 
 int sendFile(char *filename)
@@ -109,8 +104,11 @@ int sendFile(char *filename)
     dataSend = (unsigned char *)malloc(TRANSMIT_SIZE * sizeof(char));
 
     fileData = getCharBuffer(filename, &fileSize);
-    //controlPacket(2, fileSize, filename);
-    //printf("Sended control packet with control 2\n");
+
+    printf("Start control packet with control 2\n");
+    controlPacket(2, fileSize, filename);
+
+    printf("Sended control packet with control 2\n");
 
     while ((fileSize - sendSize) >= TRANSMIT_SIZE)
     { //if possible sends TRANSMIT_SIZE bytes of data
@@ -133,87 +131,69 @@ int sendFile(char *filename)
     }
     printf("sendSize: %d\n", sendSize);
 
-   // printf("Sending control packet with control 3\n");
-   // controlPacket(3, fileSize, filename);
+    printf("Sending control packet with control 3\n");
+    //controlPacket(3, fileSize, filename);
 
-   free(dataSend);
+    free(dataSend);
     return 0;
 }
 
-int receiveControlPacket2(unsigned char *filename)
+int receiveControlPacket(int control,unsigned char *filename)
 {
-    unsigned char* set;
-    int sizeoffileSize, sizeoffilename;
-    int fileSize;
-    set = (unsigned char *)malloc(25 *sizeof(unsigned char));
+    unsigned char * controlPac;
+    int fileSize = 0;
 
-    int readBytes = llread(application.fileDescriptor, set);
-    printf("%d\n", readBytes);
-    printf("Done llRead\n");
-    printf("%d", set[0]);
+    controlPac = (unsigned char *)malloc(60 *sizeof(unsigned char));
 
-    int i = 1;
-    if (atoi(set[0]) != 2)
-    {
-        printf("Control different then the expected\n");
-        exit(-1);
-    }
-    while (set[i] != '\0')
-    {
-        printf("y");
-        if (set[i] == 0)
-        {
-            sizeoffileSize = set[i + 1];
-            fileSize = set[i + 2];
-            i = i + 2 + sizeoffileSize;
-        }
-        else if (set[i] == 1)
-        {
-            sizeoffilename = set[i + 1];
-            *filename = set[i + 2];
-            i = i + 2 + sizeoffilename;
-        }
-        else
-        {
-            return -1;
-        }
-    }
-    free(set);
-    return fileSize;
-}
+	if (llread(application.fileDescriptor, controlPac) < 0) {
+		printf("ERROR in rcvCtrlPkt(): \n");
+		return -1;
+	}
+	
+	if ((controlPac[0] - '0') != control) {
+		printf("ERROR in rcvCtrlPkt(): unexpected control field!\n");
+		return -2;
+	}
 
-int receiveControlPacket3(unsigned char *filename, unsigned char *set)
-{
-    int sizeoffileSize, sizeoffilename;
-    int fileSize;
+	if ((controlPac[1] - '0') != 0) {
+		printf("ERROR in rcvCtrlPkt(): unexpected size param!\n");
+		return -3;
+	}
 
-    int i = 1;
+	int i, fileSizeLength = (controlPac[2] - '0'), j = 3;
 
-    if (atoi(set[0]) != 3)
-    {
-        printf("Control different then the expected\n");
-        exit(-1);
-    }
-    while (set[i] != '\0')
-    {
-        if (set[i] == 0)
-        {
-            sizeoffileSize = set[i + 1];
-            fileSize = set[i + 2];
-            i = i + 2 + sizeoffileSize;
-        }
-        else if (set[i] == 1)
-        {
-            sizeoffilename = set[i + 1];
-            *filename = set[i + 2];
-            i = i + 2 + sizeoffilename;
-        }
-        else
-        {
-            return -1;
-        }
-    }
-    return fileSize;
+	char fileSizeStr[20];
+
+	for(i = 0; i < fileSizeLength; i++) {
+		fileSizeStr[i] = controlPac[j];
+		j++;
+	}
+
+	fileSizeStr[j - 3] = '\0';
+
+	fileSize = atoi(fileSizeStr);
+
+	if((controlPac[j] - '0') != 1) {
+		printf("ERROR in rcvCtrlPkt(): unexpected name param!\n");
+		return -4;
+	}
+
+	j++;	
+	int pathLength = (controlPac[j] - '0');
+	j++;
+
+	char pathStr[30];
+	
+	for(i = 0; i < pathLength; i++) {
+		pathStr[i] = controlPac[j];
+		j++;
+	}
+
+	pathStr[i] = '\0';
+	strcpy(filename, pathStr);
+    free(controlPac);
+	return fileSize;
+
 }
 
 //Functions of the receiver
@@ -224,22 +204,20 @@ int receiveDataPacket(FILE *sendFile, unsigned char *filename, int *fileWritten)
     static int sequenceNumber = 0;
     int readSize, receiveSequenceNumber;
     unsigned char fileData[TRANSMIT_SIZE +4];
-    unsigned char *data;
 
     readSize = llread(application.fileDescriptor, fileData);
-
-    data = (unsigned char *)malloc((readSize-4) *sizeof(unsigned char)); //the size of data the size of the effective data
 
     printf("Read Size: %d\n", readSize);
 
     *fileWritten += (readSize - 4); //control, sequence number and L1 and L2 aren't data
 
     control = fileData[0];
- /*   if (control == 3)
+
+    if ((fileData[0] - '0') == 3)
     {
-        receiveControlPacket3(filename, fileData);
+        printf("Receive control Packet 3 to soon \n");
     } 
-    else */if (control == 2)
+    else if (control == 2)
     {
         return -1;
     }
@@ -266,17 +244,13 @@ int receiveDataPacket(FILE *sendFile, unsigned char *filename, int *fileWritten)
         exit(-1);
     }
 
+    //puts char by char
     for(int i =0 ; i < (readSize-4); i++)
     {
-        data[i] = fileData[4 + i];
-        printf("%c", data[i]);
+        putc(fileData[4 + i], sendFile);
+        printf("%c", fileData[4 + i]);
 
     } 
-    while( fputs(data, sendFile) == EOF){
-        printf("Couldn't put data in th file, trying again\n");
-    }
-
-    free(data);
 
     return 0;
 }
@@ -286,20 +260,12 @@ int receiveFile()
     FILE *sendFile;
     int fileSize, fileWritten = 0;
     unsigned char *filename;
-    filename = (unsigned char *)malloc(25*sizeof(char));
+    filename = (unsigned char *)malloc(25*sizeof(unsigned char));
 
-   /* fileSize = receiveControlPacket2(filename);   
-    printf("File Size: %d\n", fileSize);*/
-    //for testing only!
-    //fileSize = 10968;
-    //filename = "pinguim1.gif";
+    fileSize = receiveControlPacket(2, filename); 
 
-   
-   fileSize = 897;
-   filename = "Wor.txt";
-
-
-    printf("Size of the file %d\n", fileSize);
+    //in the same pc has to exist !!!
+    filename = "fff.txt";
 
     sendFile = fopen(filename, "a");
     if(sendFile == NULL){
@@ -311,7 +277,7 @@ int receiveFile()
         receiveDataPacket(sendFile, filename, &fileWritten);
         printf("file Written: %d\n", fileWritten);
     }
-
+   // receiveControlPacket(3, filename);
     fclose(sendFile);
     return 0;
 }
