@@ -36,6 +36,7 @@ unsigned char *getCharBuffer(char *filename, int *fileSize)
 
 int sendDataPacket(int sendSize, int sequenceNumber, unsigned char *data, unsigned char *packet)
 {
+    static int sequenceCounter = 0;
     int count = 0;
 
     packet[0] = 1 + '0'; //converting in char
@@ -49,10 +50,11 @@ int sendDataPacket(int sendSize, int sequenceNumber, unsigned char *data, unsign
   
     while (count < sendSize) //getting the real data
     {
-        packet[4 + count] = data[count + (sequenceNumber * TRANSMIT_SIZE)];
+        packet[4 + count] = data[count + (sequenceCounter * TRANSMIT_SIZE)];
         count++;
     }
 
+    sequenceCounter++;
     return 0;
 }
 
@@ -98,9 +100,7 @@ int sendFile(char *filename)
 {
     int fileSize;
     int sendSize = 0, sequenceNumber = 0;
-    unsigned char *fileData, *dataSend;
-
-    dataSend = (unsigned char *)malloc(TRANSMIT_SIZE * sizeof(char));
+    unsigned char *fileData, dataSend[TRANSMIT_SIZE + 4];
 
     fileData = getCharBuffer(filename, &fileSize);
     
@@ -240,7 +240,7 @@ int receiveDataPacket(FILE *sendFile, int *fileWritten)
     if ((readSize-4)  != ((256 * L2) + L1))
     {
         printf("Wrong Reception, L1 and L2 don't mach readSize \n");
-        //return -1;
+        return -1;
     }
 
     //if everything went well, and only then, change values
@@ -248,9 +248,9 @@ int receiveDataPacket(FILE *sendFile, int *fileWritten)
     *fileWritten += (readSize - 4); //control, sequence number and L1 and L2 aren't data
     
     //puts char by char
-    for(int i =0 ; i < (readSize-4); i++)
+    for(int i=0 ; i < (readSize-4); i++)
     {
-        putc(fileData[4 + i], sendFile);
+        putc((int)fileData[4 + i], sendFile);
     } 
 
     return 0;
@@ -265,7 +265,7 @@ int receiveFile()
 
     fileSize = receiveControlPacket(2, filename); 
 
-    sendFile = fopen(filename, "a");
+    sendFile = fopen(filename, "w");
     if(sendFile == NULL){
         printf("couldn't open file\n");
         exit(-1);

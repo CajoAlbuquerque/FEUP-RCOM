@@ -91,12 +91,6 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
     */
     else if (state == DATA_LOOP && !flags->repeated_data)
     { //Data is being received
-      // If current byte is bcc2 would data be ok?
-      if (current_bcc2 == byte)
-        flags->data_ok = TRUE;
-      else
-        flags->data_ok = FALSE;
-
       if (byte == ESC)
       { //byte used for stuffing
         flags->escape_byte = TRUE;
@@ -112,6 +106,12 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
 
         flags->escape_byte = FALSE;
       }
+
+      // If current byte is bcc2 would data be ok?
+      if (current_bcc2 == byte)
+        flags->data_ok = TRUE;
+      else
+        flags->data_ok = FALSE;
 
       current_bcc2 = current_bcc2 ^ byte;
       buffer[current_index] = byte;
