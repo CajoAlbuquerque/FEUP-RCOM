@@ -166,7 +166,7 @@ int llread(int fd, unsigned char *buffer)
   initFlags(&flags);
 
   result = read_dataFrame(fd, buffer, &flags);
-  printf("bytes Read: %d\n", result);
+  printf("Data Read: %d\n", result);
   resetTimeouts();
 
   // When there is repeated data, buffer will have no content

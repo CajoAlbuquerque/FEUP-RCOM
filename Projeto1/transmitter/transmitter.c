@@ -85,7 +85,23 @@ int parseMessage(unsigned char *buffer, int length)
     bcc2 = bcc2 ^ buffer[i];
   }
 
-  msg[BCC_INDEX + length + 1 + j] = bcc2;
+  // BCC2 stuffing
+  if (bcc2 == ESC)
+  {
+    msg[BCC_INDEX + length + 1 + j] = ESC;
+    j++;
+    msg[BCC_INDEX + length + 1 + j] = ESC_SOL;
+  }
+  else if (bcc2 == FLAG)
+  {
+    msg[BCC_INDEX + length + 1 + j] = ESC;
+    j++;
+    msg[BCC_INDEX + length + 1 + j] = FLAG_SOL;
+  }
+  else{
+    msg[BCC_INDEX + length + 1 + j] = bcc2;
+  }
+
   msg[BCC_INDEX + length + 2 + j] = FLAG;
 
   msg_length = BCC_INDEX + length + 2 + j + 1;
