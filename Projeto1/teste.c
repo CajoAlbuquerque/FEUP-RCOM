@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
         }
         printf("-------------------Ended Open Phase \n");
         printf("-------------------Started Data Phase \n");
-        sleep(7);
         unsigned char msg[255] = "ola";
         printf("Message is : %s\n", msg);
         printf("msg size is = %d\n", 255);
@@ -30,7 +29,7 @@ int main(int argc, char *argv[])
             perror("Error on write");
             exit(1);
         }
-        sleep(4);
+        
         unsigned char msg2[30] = "ola a t~odos{ Amigos ~{!";
         printf("Message is : %s\n", msg2);
         printf("msg2 size is = %d\n", strlen(msg2) + 1);
@@ -39,7 +38,7 @@ int main(int argc, char *argv[])
             perror("Error on write");
             exit(1);
         }
-        sleep(3);
+        
         unsigned char msg3[30] = "~{~{~{ Ja chega fds...";
         printf("Message is : %s\n", msg3);
         printf("msg3 size is = %d\n", 30 + 1);
@@ -48,7 +47,6 @@ int main(int argc, char *argv[])
             perror("Error on write");
             exit(1);
         }
-        sleep(7);
 
         printf("-------------------Ended Data Phase \n");
         printf("-------------------Started Close Phase \n");

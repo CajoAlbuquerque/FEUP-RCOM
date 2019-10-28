@@ -57,7 +57,8 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
 {
   unsigned char current_bcc2 = 0;
   unsigned char byte;
-  unsigned int current_index = 0, read_res;
+  unsigned int current_index = 0;
+  int read_res;
   int state = START;
 
   alarm(TIMEOUT_INTERVAL);
@@ -78,8 +79,8 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
 
     if (state == C_RCV)
     { //Checking for repeated data
-      if (byte == CONTROL_0 && NR == 1 ||
-          byte == CONTROL_1 && NR == 0)
+      if ((byte == CONTROL_0 && NR == 1) ||
+          (byte == CONTROL_1 && NR == 0))
         flags->repeated_data = TRUE;
       else if (byte == C_DISC)
         flags->send_disc = TRUE;

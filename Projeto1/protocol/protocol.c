@@ -190,7 +190,6 @@ int llread(int fd, unsigned char *buffer)
   if (flags.send_disc)
   {
     printf("Received DISC\n");
-    sleep(7);
     if (write_suFrame(fd, C_DISC) < 0)
       return -2;
     printf("Sent DISC\n");
@@ -292,7 +291,6 @@ int llclose(int fd)
   resetTimeouts();
   printf("Received DISC\n");
 
-  sleep(7);
   if (write_suFrame(fd, C_UA) < 0)
     return -1;
   printf("Sent C_UA\n");
