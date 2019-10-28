@@ -37,6 +37,7 @@ unsigned char *getCharBuffer(char *filename, int *fileSize)
 int sendDataPacket(int sendSize, int sequenceNumber, unsigned char *data, unsigned char *packet)
 {
     int count = 0;
+    static int sequenceCounter = 0;
 
     packet[0] = 1 + '0'; //converting in char
     packet[1] = sequenceNumber;
@@ -49,10 +50,11 @@ int sendDataPacket(int sendSize, int sequenceNumber, unsigned char *data, unsign
 
     while (count < sendSize) //getting the real data
     {
-        packet[4 + count] = data[count + (sequenceNumber * TRANSMIT_SIZE)];
+        packet[4 + count] = data[count + (sequenceCounter * TRANSMIT_SIZE)];
         count++;
     }
-    printf("d\n", count);
+    sequenceCounter++;
+    printf("%d\n", count);
     return 0;
 }
 
@@ -100,7 +102,7 @@ int sendFile(char *filename)
     int sendSize = 0, sequenceNumber = 0;
     unsigned char *fileData, *dataSend;
 
-    dataSend = (unsigned char *)malloc(TRANSMIT_SIZE * sizeof(char));
+    dataSend = (unsigned char *)malloc((TRANSMIT_SIZE + 4) * sizeof(char));
 
     fileData = getCharBuffer(filename, &fileSize);
 
