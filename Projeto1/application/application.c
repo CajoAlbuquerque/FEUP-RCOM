@@ -240,7 +240,7 @@ int receiveDataPacket(FILE *sendFile, int *fileWritten)
     if ((readSize-4)  != ((256 * L2) + L1))
     {
         printf("Wrong Reception, L1 and L2 don't mach readSize \n");
-        return -1;
+        //return -1;
     }
 
     //if everything went well, and only then, change values
@@ -272,11 +272,16 @@ int receiveFile()
     }
     while (fileWritten < fileSize)
     {
-        receiveDataPacket(sendFile, &fileWritten);     
+        receiveDataPacket(sendFile, &fileWritten);
     }
     printf("file Written: %d\n", fileWritten);
     printf("Receiving control packet with control 3\n");
     receiveControlPacket(3, filename);
+
+    unsigned char buf[1];
+    if(llread(application.fileDescriptor, buf) == -1){
+        printf("Closed successfully\n");
+    }
 
     fclose(sendFile); 
    // free(filename);
@@ -311,7 +316,7 @@ int main(int argc, char **argv)
     else
     {      
         receiveFile();
-        llclose(application.fileDescriptor);
+        //llclose(application.fileDescriptor);
     }
 
     printf("Successfull transmition\n");

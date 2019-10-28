@@ -166,20 +166,24 @@ int llread(int fd, unsigned char *buffer)
   initFlags(&flags);
 
   result = read_dataFrame(fd, buffer, &flags);
-  printf("bytes Read: %d\n",result);
+  printf("bytes Read: %d\n", result);
   resetTimeouts();
 
   // When there is repeated data, buffer will have no content
   if (flags.repeated_data)
   {
-    if (NR == 1){
+    if (NR == 1)
+    {
       printf("Received Repeated Data 0\n");
-      write_suFrame(fd, RR_1);
+      if (write_suFrame(fd, RR_1) < 0)
+        return -2;
       printf("Sent RR_1\n");
     }
-    else{
+    else
+    {
       printf("Received Repeated Data 1\n");
-      write_suFrame(fd, RR_0);
+      if (write_suFrame(fd, RR_0) < 0)
+        return -2;
       printf("Sent RR_0\n");
     }
 
@@ -190,8 +194,10 @@ int llread(int fd, unsigned char *buffer)
   if (flags.send_disc)
   {
     printf("Received DISC\n");
+
     if (write_suFrame(fd, C_DISC) < 0)
       return -2;
+
     printf("Sent DISC\n");
 
     setPhase(close_phase);
@@ -210,13 +216,15 @@ int llread(int fd, unsigned char *buffer)
     if (NR == 1)
     {
       setNR(0);
-      write_suFrame(fd, RR_0);
+      if (write_suFrame(fd, RR_0) < 0)
+        return -2;
       printf("Sent RR_0\n");
     }
     else
     {
       setNR(1);
-      write_suFrame(fd, RR_1);
+      if (write_suFrame(fd, RR_1) < 0)
+        return -2;
       printf("Sent RR_1\n");
     }
   }
@@ -225,13 +233,15 @@ int llread(int fd, unsigned char *buffer)
     if (NR == 1)
     {
       result = 0;
-      write_suFrame(fd, REJ_1);
+      if (write_suFrame(fd, REJ_1) < 0)
+        return -2;
       printf("Sent REJ_1\n");
     }
     else
     {
       result = 0;
-      write_suFrame(fd, REJ_0);
+      if (write_suFrame(fd, REJ_0) < 0)
+        return -2;
       printf("Sent REJ_0\n");
     }
   }
