@@ -261,12 +261,9 @@ int receiveFile()
     FILE *sendFile;
     int fileSize, fileWritten = 0;
     unsigned char *filename;
-    filename = (unsigned char *)malloc(25*sizeof(unsigned char));
+    filename = (unsigned char *)malloc(30*sizeof(unsigned char));
 
     fileSize = receiveControlPacket(2, filename); 
-
-    //in the same pc has to exist !!!
-    filename = "pin.gif";
 
     sendFile = fopen(filename, "a");
     if(sendFile == NULL){
