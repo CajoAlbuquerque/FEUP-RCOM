@@ -85,18 +85,9 @@ int parseMessage(unsigned char *buffer, int length)
     bcc2 = bcc2 ^ buffer[i];
   }
 
-  //bbc2 can not be qual to FLAG
-  if(bcc2 == FLAG){
-    msg[BCC_INDEX + length + 1 + j] = ESC;
-    j++;
-    msg[BCC_INDEX + length + 2 + j] = FLAG_SOL; // FLAG_SOL = FLAG ^ 0x20
-    msg[BCC_INDEX + length + 3 + j] = FLAG;
-  }
-  else{
-    msg[BCC_INDEX + length + 1 + j] = bcc2;
-    msg[BCC_INDEX + length + 2 + j] = FLAG;
-  }
-  
+  msg[BCC_INDEX + length + 1 + j] = bcc2;
+  msg[BCC_INDEX + length + 2 + j] = FLAG;
+
   return 0;
 }
 
