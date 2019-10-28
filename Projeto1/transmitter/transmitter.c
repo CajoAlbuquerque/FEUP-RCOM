@@ -95,6 +95,8 @@ int parseMessage(unsigned char *buffer, int length)
 
 int sendMessage(int fd)
 {
+  for(int i= 0; i < msg_length; i++){
+  }
   return write(fd, msg, msg_length);
 }
 
