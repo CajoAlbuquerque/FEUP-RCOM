@@ -38,6 +38,7 @@ int sendDataPacket(int sendSize, int sequenceNumber, unsigned char *data, unsign
 {
     static int sequenceCounter = 0;
     int count = 0;
+    static int sequenceCounter = 0;
 
     packet[0] = 1 + '0'; //converting in char
     packet[1] = sequenceNumber;
@@ -47,7 +48,7 @@ int sendDataPacket(int sendSize, int sequenceNumber, unsigned char *data, unsign
 
     packet[2] = L2;
     packet[3] = L1;
-  
+
     while (count < sendSize) //getting the real data
     {
         packet[4 + count] = data[count + (sequenceCounter * TRANSMIT_SIZE)];
@@ -93,28 +94,31 @@ int sendControlPacket(unsigned int control, int fileSize, char *filename)
 	}
 
 	return 0;
- 
+
 }
 
 int sendFile(char *filename)
 {
     int fileSize;
     int sendSize = 0, sequenceNumber = 0;
-    unsigned char *fileData, dataSend[TRANSMIT_SIZE + 4];
+    unsigned char *fileData, *dataSend;
+
+    dataSend = (unsigned char *)malloc((TRANSMIT_SIZE + 4) * sizeof(char));
 
     fileData = getCharBuffer(filename, &fileSize);
-    
+
     printf("Sending control packet with control 2\n");
     sendControlPacket(2, fileSize, filename);
 
     while ((fileSize - sendSize) >= TRANSMIT_SIZE)
     { //if possible sends TRANSMIT_SIZE bytes of data
-       
+
         sendSize += TRANSMIT_SIZE; //each time only TRANSMIT_SIZE are really data
         sendDataPacket(TRANSMIT_SIZE, sequenceNumber, fileData, dataSend );
         sequenceNumber = (sequenceNumber + 1) % 255; //sequencial number in modules of 255
 
-        llwrite(application.fileDescriptor, dataSend, TRANSMIT_SIZE + 4);      
+        int written = llwrite(application.fileDescriptor, dataSend, TRANSMIT_SIZE + 4);
+        printf("Written %d\n", written);
 
     }
     if ((fileSize - sendSize) > 0)
@@ -122,7 +126,7 @@ int sendFile(char *filename)
         sendDataPacket((fileSize - sendSize) , sequenceNumber, fileData, dataSend);
         llwrite(application.fileDescriptor, dataSend, ((fileSize - sendSize)+4));
         sendSize += (fileSize - sendSize);
-        
+
     }
     printf("sendSize: %d\n", sendSize);
 
@@ -143,7 +147,7 @@ int receiveControlPacket(int control,unsigned char *filename)
 		printf("ERROR in rcvCtrlPkt(): \n");
 		return -1;
 	}
-	
+
 	if ((controlPac[0] - '0') != control) {
 		printf("ERROR in rcvCtrlPkt(): unexpected control field!\n");
 		return -2;
@@ -172,12 +176,12 @@ int receiveControlPacket(int control,unsigned char *filename)
 		return -4;
 	}
 
-	j++;	
+	j++;
 	int pathLength = (controlPac[j] - '0');
 	j++;
 
 	char pathStr[30];
-	
+
 	for(i = 0; i < pathLength; i++) {
 		pathStr[i] = controlPac[j];
 		j++;
@@ -214,7 +218,7 @@ int receiveDataPacket(FILE *sendFile, int *fileWritten)
     {
         printf("Receive control Packet 3 to soon \n");
         return -1;
-    } 
+    }
     else if (control == 2)
     {
         //receive control 2 twice, ignoring
@@ -232,7 +236,7 @@ int receiveDataPacket(FILE *sendFile, int *fileWritten)
     {
         printf("Expected sequencial number %d, received %d", sequenceNumber, receiveSequenceNumber);
         return -1;
-    } 
+    }
 
     L2 = fileData[2];
     L1 = fileData[3];
@@ -246,12 +250,12 @@ int receiveDataPacket(FILE *sendFile, int *fileWritten)
     //if everything went well, and only then, change values
     sequenceNumber = (sequenceNumber + 1) % 255;
     *fileWritten += (readSize - 4); //control, sequence number and L1 and L2 aren't data
-    
+
     //puts char by char
     for(int i=0 ; i < (readSize-4); i++)
     {
-        putc((int)fileData[4 + i], sendFile);
-    } 
+        putc(fileData[4 + i], sendFile);
+    }
 
     return 0;
 }
@@ -263,7 +267,7 @@ int receiveFile()
     unsigned char *filename;
     filename = (unsigned char *)malloc(30*sizeof(unsigned char));
 
-    fileSize = receiveControlPacket(2, filename); 
+    fileSize = receiveControlPacket(2, filename);
 
     sendFile = fopen(filename, "w");
     if(sendFile == NULL){
@@ -283,14 +287,14 @@ int receiveFile()
         printf("Closed successfully\n");
     }
 
-    fclose(sendFile); 
+    fclose(sendFile);
    // free(filename);
 
     return 0;
 }
 
 int main(int argc, char **argv)
-{   
+{
     if (argc < 3 || (strcmp("TRANSMITTER", argv[2]) != 0 && strcmp("RECEIVER", argv[2]) != 0))
     {
         printf("Usage: %s <serial port number> <TRANSMITTER || RECEIVER>\n", argv[0]);
@@ -314,7 +318,7 @@ int main(int argc, char **argv)
         llclose(application.fileDescriptor);
     }
     else
-    {      
+    {
         receiveFile();
         //llclose(application.fileDescriptor);
     }
