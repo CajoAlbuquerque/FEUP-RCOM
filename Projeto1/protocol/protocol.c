@@ -261,7 +261,7 @@ int llwrite(int fd, unsigned char *buffer, int length)
   do
   {
     result = sendMessage(fd);
-    printf("Sent Data\n");
+    printf("Sent Data: %d bytes\n", result);
 
     if (result < 0)
       return -1;

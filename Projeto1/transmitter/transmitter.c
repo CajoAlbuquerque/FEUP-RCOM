@@ -88,6 +88,8 @@ int parseMessage(unsigned char *buffer, int length)
   msg[BCC_INDEX + length + 1 + j] = bcc2;
   msg[BCC_INDEX + length + 2 + j] = FLAG;
 
+  msg_length = BCC_INDEX + length + 2 + j + 1;
+
   return 0;
 }
 
