@@ -115,12 +115,18 @@ int sendFile(char *filename)
         sendDataPacket(TRANSMIT_SIZE, sequenceNumber, fileData, dataSend );
         sequenceNumber = (sequenceNumber + 1) % 255; //sequencial number in modules of 255
 
-        int written = llwrite(application.fileDescriptor, dataSend, TRANSMIT_SIZE + 4);
+        if(llwrite(application.fileDescriptor, dataSend, TRANSMIT_SIZE + 4) < 0){
+            printf("Comunication failed: failed to write to the serial port\n");
+            return -1;
+        }
     }
     if ((fileSize - sendSize) > 0)
     {
         sendDataPacket((fileSize - sendSize) , sequenceNumber, fileData, dataSend);
-        llwrite(application.fileDescriptor, dataSend, ((fileSize - sendSize)+4));
+        if(llwrite(application.fileDescriptor, dataSend, ((fileSize - sendSize)+4))){
+            printf("Comunication failed: failed to write to the serial port\n");
+            return -1;
+        }
         sendSize += (fileSize - sendSize);
 
     }
