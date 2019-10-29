@@ -40,10 +40,10 @@ void timeoutHandler(int signo)
   if (signo != SIGALRM)
     return;
 
-  printf("TIMEOUT\n");
   timeouts++;
-  if (timeouts < TIMEOUT_MAX_ATTEMPTS)
+  if (timeouts <= TIMEOUT_MAX_ATTEMPTS)
   {
+    printf("Timeout\n");
     switch (phase)
     {
     case open_phase:

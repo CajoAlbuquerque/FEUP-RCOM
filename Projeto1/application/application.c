@@ -123,7 +123,7 @@ int sendFile(char *filename)
     if ((fileSize - sendSize) > 0)
     {
         sendDataPacket((fileSize - sendSize) , sequenceNumber, fileData, dataSend);
-        if(llwrite(application.fileDescriptor, dataSend, ((fileSize - sendSize)+4))){
+        if(llwrite(application.fileDescriptor, dataSend, ((fileSize - sendSize)+4)) < 0){
             printf("Comunication failed: failed to write to the serial port\n");
             return -1;
         }
