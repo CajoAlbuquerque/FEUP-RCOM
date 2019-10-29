@@ -158,6 +158,7 @@ int llread(int fd, unsigned char *buffer)
   initFlags(&flags);
 
   result = read_dataFrame(fd, buffer, &flags);
+  printf("Received Data: %d bytes\n", result);
   resetTimeouts();
 
   // When there is repeated data, buffer will have no content
