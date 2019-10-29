@@ -49,4 +49,4 @@
 #define END 6
 
 //transmit size
-#define TRANSMIT_SIZE 256
+#define TRANSMIT_SIZE 1024

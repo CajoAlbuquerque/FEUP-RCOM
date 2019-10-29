@@ -38,7 +38,6 @@ int sendDataPacket(int sendSize, int sequenceNumber, unsigned char *data, unsign
 {
     static int sequenceCounter = 0;
     int count = 0;
-    static int sequenceCounter = 0;
 
     packet[0] = 1 + '0'; //converting in char
     packet[1] = sequenceNumber;
@@ -138,7 +137,7 @@ int sendFile(char *filename)
     return 0;
 }
 
-int receiveControlPacket(int control,unsigned char *filename)
+int receiveControlPacket(int control, char *filename)
 {
     unsigned char controlPac[70];
     int fileSize = 0;
@@ -264,8 +263,8 @@ int receiveFile()
 {
     FILE *sendFile;
     int fileSize, fileWritten = 0;
-    unsigned char *filename;
-    filename = (unsigned char *)malloc(30*sizeof(unsigned char));
+    char *filename;
+    filename = (char *)malloc(30* sizeof(char));
 
     fileSize = receiveControlPacket(2, filename);
 

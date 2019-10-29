@@ -57,7 +57,7 @@ int sendFile(char *filename);
  *
  *  @return success
  */
-int receiveControlPacket(int control,unsigned char *filename);
+int receiveControlPacket(int control, char *filename);
 
 /**
  *  receives a file

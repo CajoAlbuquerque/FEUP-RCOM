@@ -166,7 +166,6 @@ int llread(int fd, unsigned char *buffer)
   initFlags(&flags);
 
   result = read_dataFrame(fd, buffer, &flags);
-  printf("Data Read: %d\n", result);
   resetTimeouts();
 
   // When there is repeated data, buffer will have no content
@@ -261,7 +260,6 @@ int llwrite(int fd, unsigned char *buffer, int length)
   do
   {
     result = sendMessage(fd);
-    printf("Sent Data: %d bytes\n", result);
     
     if (result < 0)
       return -1;
