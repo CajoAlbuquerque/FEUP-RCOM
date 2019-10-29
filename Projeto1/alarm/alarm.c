@@ -42,7 +42,7 @@ void timeoutHandler(int signo)
 
   printf("TIMEOUT\n");
   timeouts++;
-  if (timeouts < TIMEOUT_MAX_ATTEMPTS)
+  if (timeouts <= TIMEOUT_MAX_ATTEMPTS)
   {
     switch (phase)
     {

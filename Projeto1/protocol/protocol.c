@@ -202,7 +202,6 @@ int llread(int fd, unsigned char *buffer)
     return -1;
   }
 
-  printf("Received DATA\n");
   if (flags.data_ok)
   {
     if (NR == 1)
