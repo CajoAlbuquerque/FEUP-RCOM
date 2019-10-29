@@ -38,7 +38,6 @@ int sendDataPacket(int sendSize, int sequenceNumber, unsigned char *data, unsign
 {
     static int sequenceCounter = 0;
     int count = 0;
-    static int sequenceCounter = 0;
 
     packet[0] = 1 + '0'; //converting in char
     packet[1] = sequenceNumber;
@@ -65,7 +64,6 @@ int sendControlPacket(unsigned int control, int fileSize, char *filename)
 	sprintf(sizeString, "%d", fileSize);
 
 	int size = 5 + strlen(sizeString) + strlen(filename);
-    printf("size of the file: %d", size);
 	unsigned char ctrlPac[size];
 
 	ctrlPac[0] = control + '0';
@@ -118,8 +116,6 @@ int sendFile(char *filename)
         sequenceNumber = (sequenceNumber + 1) % 255; //sequencial number in modules of 255
 
         int written = llwrite(application.fileDescriptor, dataSend, TRANSMIT_SIZE + 4);
-        printf("Written %d\n", written);
-
     }
     if ((fileSize - sendSize) > 0)
     {
@@ -128,7 +124,7 @@ int sendFile(char *filename)
         sendSize += (fileSize - sendSize);
 
     }
-    printf("sendSize: %d\n", sendSize);
+    printf("Total bytes sent: %d\n", sendSize);
 
     printf("Sending control packet with control 3\n");
     sendControlPacket(3, fileSize, filename);
@@ -243,7 +239,7 @@ int receiveDataPacket(FILE *sendFile, int *fileWritten)
 
     if ((readSize-4)  != ((256 * L2) + L1))
     {
-        printf("Wrong Reception, L1 and L2 don't mach readSize \n");
+        printf("Wrong Reception, L1 and L2 don't match readSize \n");
         return -1;
     }
 
@@ -271,24 +267,23 @@ int receiveFile()
 
     sendFile = fopen(filename, "w");
     if(sendFile == NULL){
-        printf("couldn't open file\n");
+        printf("Couldn't open file\n");
         exit(-1);
     }
     while (fileWritten < fileSize)
     {
         receiveDataPacket(sendFile, &fileWritten);
     }
-    printf("file Written: %d\n", fileWritten);
+    printf("Total bytes received: %d\n", fileWritten);
     printf("Receiving control packet with control 3\n");
     receiveControlPacket(3, filename);
 
     unsigned char buf[1];
-    if(llread(application.fileDescriptor, buf) == -1){
-        printf("Closed successfully\n");
+    if(llread(application.fileDescriptor, buf) != -1){
+        
     }
 
     fclose(sendFile);
-   // free(filename);
 
     return 0;
 }
@@ -320,7 +315,6 @@ int main(int argc, char **argv)
     else
     {
         receiveFile();
-        //llclose(application.fileDescriptor);
     }
 
     printf("Successfull transmition\n");

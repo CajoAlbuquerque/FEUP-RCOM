@@ -68,7 +68,7 @@ void timeoutHandler(int signo)
   }
   else
   {
-    fprintf(stderr, "timeout: other end took too long to respond.\n");
+    fprintf(stderr, "Timeout: other end took too long to respond.\n");
     exit(-1);
   }
 

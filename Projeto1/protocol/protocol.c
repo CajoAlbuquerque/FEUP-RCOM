@@ -13,8 +13,6 @@
 #include <termios.h>
 #include <unistd.h>
 
-#define DEBUG 0
-
 static struct termios oldtio;
 
 /**
@@ -33,16 +31,10 @@ int initSerialPort(int port)
   switch (port)
   {
   case 0:
-    if (DEBUG)
-      strcpy(serialPort, "/dev/pts/1");
-    else
-      strcpy(serialPort, "/dev/ttyS0");
+    strcpy(serialPort, "/dev/ttyS0");
     break;
   case 1:
-    if (DEBUG)
-      strcpy(serialPort, "/dev/pts/2");
-    else
-      strcpy(serialPort, "/dev/ttyS1");
+    strcpy(serialPort, "/dev/ttyS1");
     break;
   case 2:
     strcpy(serialPort, "/dev/ttyS2");
@@ -166,7 +158,6 @@ int llread(int fd, unsigned char *buffer)
   initFlags(&flags);
 
   result = read_dataFrame(fd, buffer, &flags);
-  printf("Data Read: %d\n", result);
   resetTimeouts();
 
   // When there is repeated data, buffer will have no content
@@ -262,7 +253,7 @@ int llwrite(int fd, unsigned char *buffer, int length)
   {
     result = sendMessage(fd);
     printf("Sent Data: %d bytes\n", result);
-    
+
     if (result < 0)
       return -1;
 
