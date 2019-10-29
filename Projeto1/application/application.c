@@ -284,6 +284,7 @@ int receiveFile()
     }
 
     fclose(sendFile);
+    free(filename);
 
     return 0;
 }
