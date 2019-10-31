@@ -286,9 +286,8 @@ int receiveFile()
 
     unsigned char buf[1];
     if(llread(application.fileDescriptor, buf) != -1){
-        
-    }
 
+    }
     fclose(sendFile);
     free(filename);
 

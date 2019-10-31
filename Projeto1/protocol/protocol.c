@@ -152,13 +152,15 @@ int llopen(int port, int mode)
 
 int llread(int fd, unsigned char *buffer)
 {
-  unsigned int result;
+  int result;
   unsigned int NR = getNR();
   flags_t flags;
   initFlags(&flags);
 
   result = read_dataFrame(fd, buffer, &flags);
-  printf("Received Data: %d bytes\n", result);
+  if(result != -1)
+    printf("Received Data: %d bytes\n", result);
+
   resetTimeouts();
 
   // When there is repeated data, buffer will have no content
