@@ -3,7 +3,6 @@
 typedef struct flags {
     unsigned int data_ok;
     unsigned int repeated_data;
-    unsigned int nr_value;
     unsigned int escape_byte;
     unsigned int send_disc;
 } flags_t;
