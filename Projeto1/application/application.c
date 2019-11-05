@@ -265,7 +265,7 @@ int receiveDataPacket(FILE *sendFile, int *fileWritten)
 int receiveFile()
 {
     FILE *sendFile;
-    int fileSize, fileWritten = 0;
+    int fileSize, fileReceived = 0;
     char *filename;
     filename = (char *)malloc(30* sizeof(char));
 
@@ -276,17 +276,18 @@ int receiveFile()
         printf("Couldn't open file\n");
         exit(-1);
     }
-    while (fileWritten < fileSize)
+    while (fileReceived < fileSize)
     {
-        receiveDataPacket(sendFile, &fileWritten);
+        receiveDataPacket(sendFile, &fileReceived);
     }
-    printf("Total bytes received: %d\n", fileWritten);
+    printf("Total bytes received: %d\n", fileReceived);
     printf("Receiving control packet with control 3\n");
     receiveControlPacket(3, filename);
 
     unsigned char buf[1];
     if(llread(application.fileDescriptor, buf) != -1){
-
+        printf("Connection did not close when expected. Aborting...");
+        exit(-1);
     }
     fclose(sendFile);
     free(filename);
