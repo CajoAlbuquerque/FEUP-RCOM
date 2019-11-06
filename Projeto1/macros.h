@@ -49,4 +49,7 @@
 #define END 6
 
 //transmit size
-#define TRANSMIT_SIZE 1024
+#define TRANSMIT_SIZE 100
+
+#define FER_BCC1 0
+#define FER_BCC2 0

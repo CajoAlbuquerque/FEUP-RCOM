@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <time.h>
 
 // Functions of the transmitter
 unsigned char *getCharBuffer(char *filename, int *fileSize)
@@ -312,6 +313,9 @@ int main(int argc, char **argv)
     else
         application.status = RECEIVER;
 
+    clock_t start, end;
+    start = clock();
+
     application.fileDescriptor = llopen(atoi(argv[1]), application.status);
 
     if (strcmp("TRANSMITTER", argv[2]) == 0)
@@ -324,6 +328,9 @@ int main(int argc, char **argv)
         receiveFile();
     }
 
-    printf("Successfull transmition\n");
+    end = clock();
+    double elapsed_time = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+    printf("Successfull transmition. Took %f seconds\n", elapsed_time);
     return 0;
 }
