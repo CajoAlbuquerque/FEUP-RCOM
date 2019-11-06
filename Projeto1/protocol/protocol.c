@@ -152,6 +152,7 @@ int llopen(int port, int mode)
 
 int llread(int fd, unsigned char *buffer)
 {
+  //sleep(T_PROP);
   int result;
   unsigned int NR = getNR();
   flags_t flags;

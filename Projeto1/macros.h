@@ -50,6 +50,6 @@
 
 //transmit size
 #define TRANSMIT_SIZE 100
-
+#define T_PROP 3
 #define FER_BCC1 0
 #define FER_BCC2 0
