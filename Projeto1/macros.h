@@ -49,4 +49,6 @@
 #define END 6
 
 //transmit size
-#define TRANSMIT_SIZE 1024
+#define TRANSMIT_SIZE 100
+
+#define T_PROP 3
