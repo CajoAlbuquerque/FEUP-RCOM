@@ -160,6 +160,9 @@ int llread(int fd, unsigned char *buffer)
   result = read_dataFrame(fd, buffer, &flags);
   if(result != -1)
     printf("Received Data: %d bytes\n", result);
+  else
+    return -2;
+  
 
   resetTimeouts();
 
