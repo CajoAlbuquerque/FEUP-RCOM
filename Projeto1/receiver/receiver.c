@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 static unsigned int NR = 0;
@@ -45,6 +46,12 @@ int read_suFrame(int fd, unsigned char control)
     else if (read_res < 0)
       return -1;
 
+    if(state == C_RCV){
+      int randNum = (random() % 100) + 1;
+      if( randNum <= FER_BCC1){
+        byte = byte ^ randNum;
+      }
+    }
     state = suFrameSM(byte, control, state);
   }
 
@@ -73,6 +80,13 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
     else if (read_res < 0)
     {
       return -1;
+    }
+
+    if(state == C_RCV){
+      int randNum = (random() % 100) + 1;
+      if( randNum <= FER_BCC1){
+        byte = byte ^ randNum;
+      }
     }
 
     state = readSM(byte, state);
@@ -119,6 +133,11 @@ int read_dataFrame(int fd, unsigned char *buffer, flags_t *flags)
     }
   }
   alarm(0);
+
+  int randNum2 = (random() % 100) + 1;
+  if( randNum2 <= FER_BCC2){
+    flags->data_ok = FALSE;
+  }
 
   return current_index - 1;
 }
