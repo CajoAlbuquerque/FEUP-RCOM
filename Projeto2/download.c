@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     char *pass = "ga_";
 
     if(argc != 2){
-        printf("Usage: %s ftp://[<user>:<password>@]<host>/<url-path>", argv[0]);
+        printf("Usage: %s ftp://[<user>:<password>@]<host>/<url-path>\n", argv[0]);
         return -1;
     }
     printf("Nice arguments bro!\n");

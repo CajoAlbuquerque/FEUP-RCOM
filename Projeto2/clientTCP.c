@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
@@ -38,9 +39,22 @@ int open_socket(int port, char *address)
 	return sockfd;
 }
 
+void clear_buffer(int socket) {
+	char buf[MAX_SIZE];
+	int bytes;
+
+	while((bytes = read(socket, buf, MAX_SIZE)) > 0){
+		printf("%d bytes read\n", bytes);
+		continue;
+	}
+	printf("%d bytes read\n", bytes);
+	printf("Buffer cleared\n");
+}
+
 int configure_server(int socket, const char *user,const char *pass){
 	char cmd[MAX_SIZE];
 	int bytes, cat_result;
+
 
 	cat_result = sprintf(cmd, "user %s", user);
 	bytes = write(socket, cmd, cat_result + 1);
@@ -49,13 +63,14 @@ int configure_server(int socket, const char *user,const char *pass){
 		return -1;
 	}
 
-	bytes = read(socket, cmd, MAX_SIZE);
-	if(bytes < 0){
-		perror("reading user");
-		return -1;
-	}
+	// bytes = read(socket, cmd, MAX_SIZE);
+	// if(bytes < 0){
+	// 	perror("reading user");
+	// 	return -1;
+	// }
+	// cmd[bytes] = '\0';
 
-	printf("Response : %s\n",cmd);
+	// printf("Response : %s\n",cmd);
 
 	cat_result = sprintf(cmd, "pass %s", pass);
 	bytes = write(socket, cmd, cat_result + 1);
@@ -64,20 +79,30 @@ int configure_server(int socket, const char *user,const char *pass){
 		return -1;
 	}
 
+	// bytes = read(socket, cmd, MAX_SIZE);
+	// if(bytes < 0){
+	// 	perror("reading pass");
+	// 	return -1;
+	// }
+	// cmd[bytes] = '\0';
+
+	// printf("Response : %s\n",cmd);
+
+	clear_buffer(socket);
+	cat_result = sprintf(cmd, "pasv");
+	bytes = write(socket, cmd, cat_result + 1);
+	if(bytes < 0){
+		perror("writing pasv");
+		return -1;
+	}
+
 	bytes = read(socket, cmd, MAX_SIZE);
 	if(bytes < 0){
 		perror("reading pass");
 		return -1;
 	}
-
+	cmd[bytes] = '\0';
 	printf("Response : %s\n",cmd);
-
-	// cmd = "pasv";
-	// bytes = write(socket, cmd, sizeof(cmd));
-	// if(bytes < 0){
-	// 	perror("writing pasv");
-	// 	return -1;
-	// }
 
 	return 0;
 }
