@@ -39,42 +39,46 @@ int open_socket(int port, char *address)
 	return sockfd;
 }
 
-int calculate_port(int left, int right) {
-	return left * 256 + right;
-}
-
 int parse_ip_port(const char * line, char * ip) {
 	char * raw = strchr(line, '(');
 	int length = strlen(raw);
 	char values[length];
-	char nums[6][3];
+	char nums[6][4];
 	char *token;
 	
 	strncpy(values, raw + 1, length - 5);
-	printf("Values: %s\n", values);
    
 	token = strtok(values, ",");
 	strcpy(nums[0], token);
 
   	for(int i = 1; i < 6; i++) {
 		token = strtok(NULL, ",");
-		printf("token %d: %s\n", i, token);
 		strcpy(nums[i], token);
-		printf("NUMS %d: %s\n", i-1, nums[i-1]);
    	}
 	
-	sprintf(ip, "%s.%s.%s.%s", nums[0], nums[1], nums[2], nums[3]);
-	printf("IP: %s\n", ip);
+	if(sprintf(ip, "%s.%s.%s.%s", nums[0], nums[1], nums[2], nums[3]) < -1){
+		perror("Constructing response IP");
+		return -1;
+	}
 
-	return calculate_port(atoi(nums[4]), atoi(nums[5]));	
+	return atoi(nums[4]) * 256 + atoi(nums[5]);
 }
 
 int get_ip_port(int fd, char * ip) {
 	FILE* socket = fdopen(fd, "r");
 	char buf[MAX_SIZE], code[4]; //code is the line first 3 digits
 
+	if(socket == NULL){
+		perror("Opening file descriptor");
+		return -1;
+	}
+
 	while(1) {
-		fgets(buf, MAX_SIZE, socket);
+		if(fgets(buf, MAX_SIZE, socket) == NULL){
+			perror("Reading response");
+			return -1;
+		}
+
 		strncpy(code, buf, 3);
 		code[3] = '\0';
 
@@ -93,7 +97,7 @@ int configure_server(int socket, const char *user, const char *pass, char * ip){
 	cat_result = sprintf(cmd, "user %s\n", user);
 	bytes = write(socket, cmd, cat_result);
 	if(bytes < 0){
-		perror("writing user");
+		perror("Writing user");
 		return -1;
 	}
 
@@ -101,7 +105,7 @@ int configure_server(int socket, const char *user, const char *pass, char * ip){
 	cat_result = sprintf(cmd, "pass %s\n", pass);
 	bytes = write(socket, cmd, cat_result);
 	if(bytes < 0){
-		perror("writing password");
+		perror("Writing password");
 		return -1;
 	}
 
@@ -109,7 +113,7 @@ int configure_server(int socket, const char *user, const char *pass, char * ip){
 	cat_result = sprintf(cmd, "pasv\n");
 	bytes = write(socket, cmd, cat_result);
 	if(bytes < 0){
-		perror("writing pasv");
+		perror("Writing pasv");
 		return -1;
 	}
 
