@@ -101,34 +101,80 @@ int configure_server(int socket, const char *user, const char *pass, char *ip)
 	char cmd[MAX_SIZE];
 	int bytes, cat_result;
 
-	// Send user comand
+	// Send user command
 	cat_result = sprintf(cmd, "user %s\n", user);
 	bytes = write(socket, cmd, cat_result);
 	if (bytes < 0)
 	{
-		perror("Writing user");
+		perror("Writing user command");
 		return -1;
 	}
 
-	// Send pass comand
+	// Send pass command
 	cat_result = sprintf(cmd, "pass %s\n", pass);
 	bytes = write(socket, cmd, cat_result);
 	if (bytes < 0)
 	{
-		perror("Writing password");
+		perror("Writing password command");
 		return -1;
 	}
 
-	// Send pasv comand
+	// Send pasv command
 	cat_result = sprintf(cmd, "pasv\n");
 	bytes = write(socket, cmd, cat_result);
 	if (bytes < 0)
 	{
-		perror("Writing pasv");
+		perror("Writing pasv command");
 		return -1;
 	}
 
 	return get_ip_port(socket, ip);
+}
+
+int retrieve_file(int socket, char *path, char *filename)
+{
+	char cmd[MAX_SIZE];
+	int bytes, cat_result;
+
+	// Send user comand
+	cat_result = sprintf(cmd, "retr %s/%s\n", path, filename);
+	bytes = write(socket, cmd, cat_result);
+	if (bytes < 0)
+	{
+		perror("Writing retr command");
+		return -1;
+	}
+
+	return 0;
+}
+
+int save_file(int socket, char *filename)
+{
+	char buf[MAX_SIZE];
+	int bytes, filefd = open(filename, O_WRONLY | O_CREAT | O_TRUNC,  0666);
+
+	if (filefd < 0)
+	{
+		perror("Creating file");
+		return -1;
+	}
+
+	while ((bytes = read(socket, buf, MAX_SIZE)) > 0)
+	{
+		if (write(filefd, buf, bytes) < 0)
+		{
+			perror("Writing to file");
+			return -1;
+		}
+	}
+
+	if (bytes < 0)
+	{
+		perror("Reading file");
+		return -1;
+	}
+
+	return 0;
 }
 
 int close_socket(int socket)
