@@ -2,8 +2,8 @@
 #include "clientTCP.c"
 
 int main(int argc, char *argv[]) {
-    int socket;
-    char *ip_address;
+    int socket, port;
+    char *ip_address, pasv_ip[MAX_SIZE];
     char *user = "anonymous";
     char *pass = "ga_";
 
@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
         printf("Usage: %s ftp://[<user>:<password>@]<host>/<url-path>\n", argv[0]);
         return -1;
     }
-    printf("Nice arguments bro!\n");
+    
     // Coneverting host name to ip address
     ip_address = getip(argv[1]); //TODO: parse argv[1]
     printf("IP = %s\n", ip_address);
@@ -23,9 +23,11 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    if(configure_server(socket, user, pass) < 0) {
+    port = configure_server(socket, user, pass, pasv_ip);
+    if( port < 0) {
         return -1;
     }
+    printf("Port is: %d\n", port);
     
     printf("It configured CRL!\n");
 

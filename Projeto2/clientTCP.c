@@ -39,72 +39,81 @@ int open_socket(int port, char *address)
 	return sockfd;
 }
 
-void clear_buffer(int socket) {
-	char buf[MAX_SIZE];
-	int bytes;
-
-	while((bytes = read(socket, buf, MAX_SIZE)) > 0){
-		printf("%d bytes read\n", bytes);
-		continue;
-	}
-	printf("%d bytes read\n", bytes);
-	printf("Buffer cleared\n");
+int calculate_port(int left, int right) {
+	return left * 256 + right;
 }
 
-int configure_server(int socket, const char *user,const char *pass){
+int parse_ip_port(const char * line, char * ip) {
+	char * raw = strchr(line, '(');
+	int length = strlen(raw);
+	char values[length];
+	char nums[6][3];
+	char *token;
+	
+	strncpy(values, raw + 1, length - 5);
+	printf("Values: %s\n", values);
+   
+	token = strtok(values, ",");
+	strcpy(nums[0], token);
+
+  	for(int i = 1; i < 6; i++) {
+		token = strtok(NULL, ",");
+		printf("token %d: %s\n", i, token);
+		strcpy(nums[i], token);
+		printf("NUMS %d: %s\n", i-1, nums[i-1]);
+   	}
+	
+	sprintf(ip, "%s.%s.%s.%s", nums[0], nums[1], nums[2], nums[3]);
+	printf("IP: %s\n", ip);
+
+	return calculate_port(atoi(nums[4]), atoi(nums[5]));	
+}
+
+int get_ip_port(int fd, char * ip) {
+	FILE* socket = fdopen(fd, "r");
+	char buf[MAX_SIZE], code[4]; //code is the line first 3 digits
+
+	while(1) {
+		fgets(buf, MAX_SIZE, socket);
+		strncpy(code, buf, 3);
+		code[3] = '\0';
+
+		if(strcmp(code, "227") == 0)
+			break;
+	}
+
+	return parse_ip_port(buf, ip);
+}
+
+int configure_server(int socket, const char *user, const char *pass, char * ip){
 	char cmd[MAX_SIZE];
 	int bytes, cat_result;
 
-
-	cat_result = sprintf(cmd, "user %s", user);
-	bytes = write(socket, cmd, cat_result + 1);
+	// Send user comand
+	cat_result = sprintf(cmd, "user %s\n", user);
+	bytes = write(socket, cmd, cat_result);
 	if(bytes < 0){
 		perror("writing user");
 		return -1;
 	}
 
-	// bytes = read(socket, cmd, MAX_SIZE);
-	// if(bytes < 0){
-	// 	perror("reading user");
-	// 	return -1;
-	// }
-	// cmd[bytes] = '\0';
-
-	// printf("Response : %s\n",cmd);
-
-	cat_result = sprintf(cmd, "pass %s", pass);
-	bytes = write(socket, cmd, cat_result + 1);
+	// Send pass comand
+	cat_result = sprintf(cmd, "pass %s\n", pass);
+	bytes = write(socket, cmd, cat_result);
 	if(bytes < 0){
 		perror("writing password");
 		return -1;
 	}
 
-	// bytes = read(socket, cmd, MAX_SIZE);
-	// if(bytes < 0){
-	// 	perror("reading pass");
-	// 	return -1;
-	// }
-	// cmd[bytes] = '\0';
-
-	// printf("Response : %s\n",cmd);
-
-	clear_buffer(socket);
-	cat_result = sprintf(cmd, "pasv");
-	bytes = write(socket, cmd, cat_result + 1);
+	// Send pasv comand
+	cat_result = sprintf(cmd, "pasv\n");
+	bytes = write(socket, cmd, cat_result);
 	if(bytes < 0){
 		perror("writing pasv");
 		return -1;
 	}
 
-	bytes = read(socket, cmd, MAX_SIZE);
-	if(bytes < 0){
-		perror("reading pass");
-		return -1;
-	}
-	cmd[bytes] = '\0';
-	printf("Response : %s\n",cmd);
-
-	return 0;
+	return get_ip_port(socket, ip);
 }
 
 int close_socket(int socket) {
