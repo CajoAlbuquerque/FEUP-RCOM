@@ -3,8 +3,8 @@ CFLAGS = -Wall -Wextra -pedantic #-Werror
 
 EXEC = download
 
-all:  download.c
-	$(CC) $(CFLAGS) download.c -o $(EXEC)
+all:  src/download.c
+	$(CC) $(CFLAGS) src/download.c -o $(EXEC)
 
 clean:
 	rm -f $(EXEC)
