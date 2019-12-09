@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
         printf("Usage: %s ftp://[<user>:<password>@]<host>/<url-path>\n", argv[0]);
         return -1;
     }
-
+    
     path = argv[2];
     filename = argv[3]; // TODO: change argv[2] to actual filename pased from argv[1]
 

@@ -102,7 +102,7 @@ int configure_server(int socket, const char *user, const char *pass, char *ip)
 	int bytes, cat_result;
 
 	// Send user command
-	cat_result = sprintf(cmd, "user %s\n", user);
+	cat_result = sprintf(cmd, "user %s\r\n", user);
 	bytes = write(socket, cmd, cat_result);
 	if (bytes < 0)
 	{
@@ -111,7 +111,7 @@ int configure_server(int socket, const char *user, const char *pass, char *ip)
 	}
 
 	// Send pass command
-	cat_result = sprintf(cmd, "pass %s\n", pass);
+	cat_result = sprintf(cmd, "pass %s\r\n", pass);
 	bytes = write(socket, cmd, cat_result);
 	if (bytes < 0)
 	{
@@ -120,7 +120,7 @@ int configure_server(int socket, const char *user, const char *pass, char *ip)
 	}
 
 	// Send pasv command
-	cat_result = sprintf(cmd, "pasv\n");
+	cat_result = sprintf(cmd, "pasv\r\n");
 	bytes = write(socket, cmd, cat_result);
 	if (bytes < 0)
 	{
@@ -137,7 +137,7 @@ int retrieve_file(int socket, char *path, char *filename)
 	int bytes, cat_result;
 
 	// Send user comand
-	cat_result = sprintf(cmd, "retr %s/%s\n", path, filename);
+	cat_result = sprintf(cmd, "retr %s/%s\r\n", path, filename);
 	bytes = write(socket, cmd, cat_result);
 	if (bytes < 0)
 	{
