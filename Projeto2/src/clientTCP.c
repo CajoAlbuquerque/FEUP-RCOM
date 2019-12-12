@@ -131,13 +131,13 @@ int configure_server(int socket, const char *user, const char *pass, char *ip)
 	return get_ip_port(socket, ip);
 }
 
-int retrieve_file(int socket, char *path, char *filename)
+int retrieve_file(int socket, char *path)
 {
 	char cmd[MAX_SIZE];
 	int bytes, cat_result;
 
 	// Send user comand
-	cat_result = sprintf(cmd, "retr %s/%s\r\n", path, filename);
+	cat_result = sprintf(cmd, "retr %s\r\n", path);
 	bytes = write(socket, cmd, cat_result);
 	if (bytes < 0)
 	{
