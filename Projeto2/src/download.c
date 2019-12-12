@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     char *ip_address, pasv_ip[MAX_SIZE];
     char user[MAX_SIZE] = "anonymous";
 	char pass[MAX_SIZE] = "ga-";
-char host[MAX_SIZE];
+	char host[MAX_SIZE];
     char filename[MAX_SIZE], path[MAX_SIZE];
     char cwd[256];
 
@@ -119,11 +119,6 @@ char host[MAX_SIZE];
  	
 	parseURL(argv[1], user, pass, host, path);
 	parseFilename(path, filename);
-printf("User : %s \n",user);
-	printf("Pass : %s \n",pass);
-printf("Host : %s \n",host);
-printf("Path : %s \n",path);
-printf("Filename : %s \n",filename);
 
     // Converting host name to ip address
     ip_address = getip(host);

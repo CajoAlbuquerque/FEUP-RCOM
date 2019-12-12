@@ -1,0 +1,80 @@
+Created by Wireshark 2.6.5 (Git v2.6.5 packaged as 2.6.5-1~deb9u1)
+
+File
+
+Name:
+/root/Desktop/RCOMA/exp6-tux31-download.pcapng
+Length:
+8,799 bytes
+Format:
+Wireshark/... - pcapng
+Encapsulation:
+Linux cooked-mode capture
+
+Time
+
+First packet:
+2019-12-12 13:15:04
+Last packet:
+2019-12-12 13:15:11
+Elapsed:
+00:00:06
+
+Capture
+
+Hardware:
+Unknown
+OS:
+Linux 3.16.0-4-686-pae
+Application:
+Dumpcap (Wireshark) 2.6.5 (Git v2.6.5 packaged as 2.6.5-1~deb9u1)
+
+Interfaces
+
+Interface
+Dropped packets
+Capture filter
+Link type
+Packet size limit
+any
+0 (0 %)
+none
+Linux cooked-mode capture
+262144 bytes
+
+Statistics
+
+Measurement
+Captured
+Displayed
+Marked
+Packets
+56
+56 (100.0%)
+—
+Time span, s
+6.581
+6.581
+—
+Average pps
+8.5
+8.5
+—
+Average packet size, B
+121
+121
+—
+Bytes
+6794
+6794 (100.0%)
+0
+Average bytes/s
+1,032
+1,032
+—
+Average bits/s
+8,258
+8,258
+—
+
+

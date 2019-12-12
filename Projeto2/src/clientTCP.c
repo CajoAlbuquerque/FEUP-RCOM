@@ -109,6 +109,8 @@ int configure_server(int socket, const char *user, const char *pass, char *ip)
 		perror("Writing user command");
 		return -1;
 	}
+	
+	sleep(1);	
 
 	// Send pass command
 	cat_result = sprintf(cmd, "pass %s\r\n", pass);
@@ -119,6 +121,8 @@ int configure_server(int socket, const char *user, const char *pass, char *ip)
 		return -1;
 	}
 
+	sleep(1);
+
 	// Send pasv command
 	cat_result = sprintf(cmd, "pasv\r\n");
 	bytes = write(socket, cmd, cat_result);
@@ -127,6 +131,8 @@ int configure_server(int socket, const char *user, const char *pass, char *ip)
 		perror("Writing pasv command");
 		return -1;
 	}
+
+	sleep(1);
 
 	return get_ip_port(socket, ip);
 }
